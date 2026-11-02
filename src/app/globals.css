@@ -1,26 +1,97 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-museum-dark: #0A0A0C;
+  --bg-museum-surface: #141418;
+  --bg-museum-card: rgba(22, 22, 27, 0.75);
+  
+  --gold-primary: #C5A059;
+  --gold-light: #F4DE9C;
+  --gold-deep: #8E6E33;
+  --champagne: #E4D8C5;
+  --ivory: #F7F5F0;
+  --charcoal: #1E1E22;
+  --stone: #8E8B82;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@theme {
+  --font-serif: var(--font-cinzel), serif;
+  --font-cormorant: var(--font-cormorant), serif;
+  --font-sans: var(--font-jakarta), sans-serif;
+  
+  --color-gold-400: #F4DE9C;
+  --color-gold-500: #DFB76C;
+  --color-gold-600: #C5A059;
+  --color-gold-700: #9A7B38;
+  --color-gold-900: #4E3E18;
+  
+  --color-ivory: #FDFBF7;
+  --color-champagne: #ECE4D6;
+  --color-charcoal-900: #0B0B0D;
+  --color-charcoal-800: #141418;
+  --color-charcoal-700: #1E1E24;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* Base styling */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #0A0A0C;
+  color: #E8E4DA;
+  font-family: var(--font-jakarta), sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom luxury typography utilities */
+.font-display {
+  font-family: var(--font-cinzel), serif;
+}
+
+.font-editorial {
+  font-family: var(--font-cormorant), serif;
+}
+
+/* Shimmer and luxury gradients */
+.gold-gradient-text {
+  background: linear-gradient(135deg, #F8E7B9 0%, #DFB76C 50%, #A57E37 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gold-border-glow {
+  box-shadow: 0 0 25px -5px rgba(223, 183, 108, 0.25);
+}
+
+.museum-panel {
+  background: rgba(18, 18, 22, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(197, 160, 89, 0.22);
+}
+
+.museum-panel-hover {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.museum-panel-hover:hover {
+  border-color: rgba(223, 183, 108, 0.45);
+  box-shadow: 0 12px 36px -8px rgba(0, 0, 0, 0.7), 0 0 20px -2px rgba(197, 160, 89, 0.18);
+}
+
+/* Custom subtle scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0d0d10;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2b2b33;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #C5A059;
 }
