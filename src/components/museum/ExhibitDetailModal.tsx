@@ -53,7 +53,7 @@ export function ExhibitDetailModal({ exhibit, galleryName, onClose }: ExhibitDet
             {/* Media Display: Photo OR Video */}
             <div className="relative group">
               <div className="relative p-2 rounded-2xl bg-gradient-to-tr from-[#9A7B38] via-[#DFB76C] to-[#8E6E33] shadow-2xl shadow-black">
-                <div className="relative overflow-hidden rounded-xl bg-black aspect-video flex items-center justify-center">
+                <div className="relative overflow-hidden rounded-xl bg-black min-h-[300px] max-h-[68vh] flex items-center justify-center">
                   {isVideo && !isClassified ? (
                     <div className="relative w-full h-full">
                       <video

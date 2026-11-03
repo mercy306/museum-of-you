@@ -791,6 +791,9 @@ function FramedArtwork({
     }
   });
 
+  const defaultAspect = exhibit.aspectRatio === 'landscape' ? 1.55 : exhibit.aspectRatio === 'square' ? 1.0 : 0.75;
+  const [aspect, setAspect] = useState<number>(defaultAspect);
+
   useEffect(() => {
     const loader = new THREE.TextureLoader();
     loader.setCrossOrigin('anonymous');
@@ -803,6 +806,17 @@ function FramedArtwork({
         tex.magFilter = THREE.LinearFilter;
         tex.anisotropy = 16;
         tex.needsUpdate = true;
+
+        // Automatically detect natural image aspect ratio so it is NEVER stretched or distorted
+        const img = tex.image as HTMLImageElement | undefined;
+        const width = img?.naturalWidth || img?.width;
+        const height = img?.naturalHeight || img?.height;
+        if (width && height && height > 0) {
+          const natAspect = width / height;
+          if (Number.isFinite(natAspect) && natAspect > 0.2 && natAspect < 5) {
+            setAspect(natAspect);
+          }
+        }
         setTexture(tex);
       },
       undefined,
@@ -832,8 +846,49 @@ function FramedArtwork({
     );
   }, [exhibit.imageUrl, exhibit.title, isVideo]);
 
-  const frameWidth = exhibit.aspectRatio === 'landscape' ? 2.8 : exhibit.aspectRatio === 'square' ? 2.2 : 1.9;
-  const frameHeight = exhibit.aspectRatio === 'landscape' ? 1.8 : exhibit.aspectRatio === 'square' ? 2.2 : 2.5;
+  // Dynamically compute exact frame & art dimensions matching the true aspect ratio (ZERO STRETCHING)
+  const { artWidth, artHeight, frameWidth, frameHeight } = useMemo(() => {
+    let w = 2.4;
+    let h = 2.4 / aspect;
+
+    if (aspect >= 1.0) {
+      // Landscape photo
+      if (w > 2.7) {
+        w = 2.7;
+        h = w / aspect;
+      }
+      if (h > 2.0) {
+        h = 2.0;
+        w = h * aspect;
+      }
+      if (h < 1.3) {
+        h = 1.3;
+        w = h * aspect;
+        if (w > 2.8) w = 2.8;
+      }
+    } else {
+      // Portrait / vertical photo
+      h = 2.3;
+      w = h * aspect;
+      if (w > 2.2) {
+        w = 2.2;
+        h = w / aspect;
+      }
+      if (w < 1.3) {
+        w = 1.3;
+        h = w / aspect;
+        if (h > 2.6) h = 2.6;
+      }
+    }
+
+    const padding = 0.22;
+    return {
+      artWidth: Number(w.toFixed(3)),
+      artHeight: Number(h.toFixed(3)),
+      frameWidth: Number((w + padding).toFixed(3)),
+      frameHeight: Number((h + padding).toFixed(3))
+    };
+  }, [aspect]);
 
   return (
     <group position={position} rotation={rotation}>
@@ -859,7 +914,7 @@ function FramedArtwork({
       </mesh>
 
       <mesh position={[0, 0, 0.06]}>
-        <planeGeometry args={[frameWidth - 0.28, frameHeight - 0.28]} />
+        <planeGeometry args={[artWidth, artHeight]} />
         {texture ? (
           <meshBasicMaterial map={texture} toneMapped={false} />
         ) : (
@@ -891,9 +946,9 @@ function FramedArtwork({
         color={isVideo ? '#e0f0ff' : '#fff4df'}
       />
 
-      <group position={[0, -frameHeight / 2 - 0.22, 0.03]}>
+      <group position={[0, -frameHeight / 2 - 0.2, 0.03]}>
         <mesh>
-          <boxGeometry args={[Math.min(frameWidth, 1.8), 0.18, 0.02]} />
+          <boxGeometry args={[Math.min(frameWidth, 1.6), 0.16, 0.02]} />
           <meshStandardMaterial
             color="#c5a059"
             metalness={0.85}
