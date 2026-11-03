@@ -141,10 +141,10 @@ export function FriendWishesModal({
               </div>
               <div>
                 <h3 className="text-lg font-serif font-bold text-[#3d2e1b] tracking-wide">
-                  Birthday Wishes & Letters
+                  Birthday Wishes 💌
                 </h3>
                 <p className="text-xs text-[#8c734b] font-serif">
-                  Heartfelt messages and tributes from friends for {honoreeName}
+                  For {honoreeName}
                 </p>
               </div>
             </div>
@@ -162,38 +162,38 @@ export function FriendWishesModal({
           <div className="flex items-center border-b border-[#c5a059]/20 bg-[#f6f2e9] px-6">
             <button
               onClick={() => setActiveTab('letter')}
-              className={`flex items-center gap-2 py-3 px-4 border-b-2 text-xs font-serif uppercase tracking-widest transition-all ${
+              className={`flex items-center gap-2 py-3 px-4 border-b-2 text-xs font-serif uppercase tracking-wider transition-all ${
                 activeTab === 'letter'
                   ? 'border-[#c5a059] text-[#73541f] font-bold bg-[#faf8f4]/60'
                   : 'border-transparent text-[#8a7a65] hover:text-[#5c4a32]'
               }`}
             >
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Milestone Letter</span>
+              <span>Letter</span>
             </button>
 
             <button
               onClick={() => setActiveTab('wishes')}
-              className={`flex items-center gap-2 py-3 px-4 border-b-2 text-xs font-serif uppercase tracking-widest transition-all ${
+              className={`flex items-center gap-2 py-3 px-4 border-b-2 text-xs font-serif uppercase tracking-wider transition-all ${
                 activeTab === 'wishes'
                   ? 'border-[#c5a059] text-[#73541f] font-bold bg-[#faf8f4]/60'
                   : 'border-transparent text-[#8a7a65] hover:text-[#5c4a32]'
               }`}
             >
               <MessageSquare className="w-3.5 h-3.5" />
-              <span>Friend Wishes ({wishes.length})</span>
+              <span>Wishes ({wishes.length})</span>
             </button>
 
             <button
               onClick={() => setActiveTab('new')}
-              className={`flex items-center gap-2 py-3 px-4 border-b-2 text-xs font-serif uppercase tracking-widest transition-all ${
+              className={`flex items-center gap-2 py-3 px-4 border-b-2 text-xs font-serif uppercase tracking-wider transition-all ${
                 activeTab === 'new'
                   ? 'border-[#c5a059] text-[#73541f] font-bold bg-[#faf8f4]/60'
                   : 'border-transparent text-[#8a7a65] hover:text-[#5c4a32]'
               }`}
             >
               <PenTool className="w-3.5 h-3.5" />
-              <span>+ Leave a Wish</span>
+              <span>+ Add Wish</span>
             </button>
           </div>
 

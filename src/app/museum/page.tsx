@@ -197,16 +197,10 @@ export default function MuseumPage() {
 
       {/* Discovered Memory Toast Notification */}
       {discoveredMemoryToast && (
-        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-50 pointer-events-auto animate-bounce max-w-[92vw]">
-          <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-neutral-900/95 border-2 border-[#d4af37] text-white shadow-2xl backdrop-blur-md">
-            <span className="text-2xl">{discoveredMemoryToast.icon}</span>
-            <div>
-              <div className="flex items-center gap-1.5 text-xs font-bold text-amber-400 uppercase tracking-wider">
-                <CheckCircle2 className="w-3.5 h-3.5" /> Secret Memory Discovered!
-              </div>
-              <p className="text-sm font-bold text-white">{discoveredMemoryToast.title}</p>
-              <p className="text-xs text-neutral-300 max-w-sm mt-0.5">{discoveredMemoryToast.revealedStory}</p>
-            </div>
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 pointer-events-auto animate-bounce max-w-[92vw]">
+          <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-neutral-900/95 border border-[#d4af37] text-white shadow-xl backdrop-blur-md">
+            <span className="text-lg">{discoveredMemoryToast.icon}</span>
+            <span className="text-xs font-bold text-amber-300">{discoveredMemoryToast.title}</span>
           </div>
         </div>
       )}

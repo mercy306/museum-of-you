@@ -2014,31 +2014,21 @@ export function MuseumWalkthrough3D({
         </div>
       )}
 
-      {/* Mobile Pinch / Drag Gestures Hint */}
-      {isTouchDevice && !isTouring && (
-        <div className="absolute bottom-6 right-6 z-30 pointer-events-none opacity-70 flex flex-col items-end gap-1 text-[10px] font-mono uppercase tracking-wider text-white">
-          <div className="bg-black/40 px-3 py-1.5 rounded-full backdrop-blur-sm border border-white/10">
-            <span>🤏 Pinch to Zoom</span>
-          </div>
-          <div className="bg-black/40 px-3 py-1.5 rounded-full backdrop-blur-sm border border-white/10">
-            <span>👆 Drag to Look</span>
-          </div>
-        </div>
-      )}
+      {/* Mobile Pinch / Drag Gestures Hint - REMOVED for clean screen */}
 
       {/* NEAR DOOR INTERACTION PROMPT */}
       {nearDoor && !isTouring && (
         <div className="absolute bottom-20 sm:bottom-16 left-1/2 -translate-x-1/2 z-40 pointer-events-auto max-w-[90vw]">
           <button
             onClick={() => handleToggleDoor(nearDoor.id)}
-            className="flex items-center gap-2.5 px-6 sm:px-7 py-3 rounded-full bg-gradient-to-r from-amber-600 via-yellow-600 to-amber-600 text-white font-display font-bold text-xs sm:text-sm tracking-wider shadow-2xl hover:scale-105 transition-all cursor-pointer animate-pulse border-2 border-white"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-amber-500 hover:bg-amber-400 text-neutral-950 font-display font-bold text-xs sm:text-sm tracking-wide shadow-xl transition-all cursor-pointer border-2 border-white"
           >
-            <span className="w-6 h-6 rounded-full bg-white text-amber-800 font-mono font-black text-xs flex items-center justify-center">
+            <span className="w-5 h-5 rounded-full bg-neutral-950 text-amber-400 font-mono font-bold text-[11px] flex items-center justify-center">
               {isTouchDevice ? '👆' : 'E'}
             </span>
             <div className="flex items-center gap-1.5">
               {nearDoor.isOpen ? <DoorOpen className="w-4 h-4" /> : <DoorClosed className="w-4 h-4" />}
-              <span>{nearDoor.isOpen ? `Close Door` : `Open Door: ${nearDoor.title}`}</span>
+              <span>{nearDoor.isOpen ? 'Close Door' : 'Open Door'}</span>
             </div>
           </button>
         </div>
@@ -2049,15 +2039,12 @@ export function MuseumWalkthrough3D({
         <div className="absolute bottom-20 sm:bottom-16 left-1/2 -translate-x-1/2 z-40 pointer-events-auto max-w-[90vw]">
           <button
             onClick={() => onCollectHiddenMemory?.(nearHiddenMemory)}
-            className="flex items-center gap-2.5 px-6 sm:px-8 py-3 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-neutral-950 font-display font-black text-xs sm:text-sm tracking-wider shadow-2xl hover:scale-105 transition-all cursor-pointer animate-bounce border-2 border-white"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-amber-400 text-neutral-950 font-display font-bold text-xs sm:text-sm tracking-wide shadow-xl transition-all cursor-pointer border-2 border-white"
           >
-            <span className="w-6 h-6 rounded-full bg-neutral-950 text-amber-400 font-mono font-black text-xs flex items-center justify-center">
+            <span className="w-5 h-5 rounded-full bg-neutral-950 text-amber-400 font-mono font-bold text-[11px] flex items-center justify-center">
               {isTouchDevice ? '👆' : 'E'}
             </span>
-            <div className="flex items-center gap-2">
-              <span className="text-base">{nearHiddenMemory.icon}</span>
-              <span>Collect Hidden Memory: {nearHiddenMemory.title} ⭐</span>
-            </div>
+            <span>Collect Memory ⭐</span>
           </button>
         </div>
       )}
@@ -2067,17 +2054,14 @@ export function MuseumWalkthrough3D({
         <div className="absolute bottom-20 sm:bottom-16 left-1/2 -translate-x-1/2 z-40 pointer-events-auto max-w-[90vw]">
           <button
             onClick={() => onOpenMysteryBox?.(nearMysteryBox)}
-            className="flex items-center gap-2.5 px-6 sm:px-7 py-3 rounded-full bg-gradient-to-r from-amber-500 via-rose-500 to-yellow-500 text-white font-display font-bold text-xs sm:text-sm tracking-wider shadow-2xl hover:scale-105 transition-all cursor-pointer animate-pulse border-2 border-white"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-rose-500 text-white font-display font-bold text-xs sm:text-sm tracking-wide shadow-xl transition-all cursor-pointer border-2 border-white"
           >
-            <span className="w-6 h-6 rounded-full bg-white text-rose-600 font-mono font-black text-xs flex items-center justify-center">
+            <span className="w-5 h-5 rounded-full bg-white text-rose-600 font-mono font-bold text-[11px] flex items-center justify-center">
               {isTouchDevice ? '👆' : 'E'}
             </span>
             <div className="flex items-center gap-1.5">
               <Gift className="w-4 h-4" />
-              <span>
-                {openedBoxIds.includes(nearMysteryBox.id) ? 'Inspect Surprise: ' : 'Unwrap Mystery Box: '}
-                {nearMysteryBox.title} 🎁
-              </span>
+              <span>Open Gift 🎁</span>
             </div>
           </button>
         </div>
@@ -2088,14 +2072,14 @@ export function MuseumWalkthrough3D({
         <div className="absolute bottom-20 sm:bottom-16 left-1/2 -translate-x-1/2 z-40 pointer-events-auto max-w-[90vw]">
           <button
             onClick={() => onOpenArcade?.()}
-            className="flex items-center gap-2.5 px-6 sm:px-8 py-3 rounded-full bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 text-white font-display font-bold text-xs sm:text-sm tracking-wider shadow-2xl hover:scale-105 transition-all cursor-pointer animate-pulse border-2 border-white"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-purple-600 text-white font-display font-bold text-xs sm:text-sm tracking-wide shadow-xl transition-all cursor-pointer border-2 border-white"
           >
-            <span className="w-6 h-6 rounded-full bg-white text-purple-700 font-mono font-black text-xs flex items-center justify-center">
+            <span className="w-5 h-5 rounded-full bg-white text-purple-700 font-mono font-bold text-[11px] flex items-center justify-center">
               {isTouchDevice ? '👆' : 'E'}
             </span>
             <div className="flex items-center gap-1.5">
               <Gamepad2 className="w-4 h-4" />
-              <span>Play Museum Mischief Arcade 🕹️</span>
+              <span>Play Games 🕹️</span>
             </div>
           </button>
         </div>
@@ -2106,12 +2090,12 @@ export function MuseumWalkthrough3D({
         <div className="absolute bottom-20 sm:bottom-16 left-1/2 -translate-x-1/2 z-40 pointer-events-auto max-w-[90vw]">
           <button
             onClick={handleCelebrateAndBlowCandles}
-            className="flex items-center gap-2.5 px-6 sm:px-8 py-3 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 text-white font-display font-bold text-xs sm:text-sm tracking-wider shadow-2xl hover:scale-105 transition-all cursor-pointer animate-pulse border-2 border-white"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-amber-500 text-white font-display font-bold text-xs sm:text-sm tracking-wide shadow-xl transition-all cursor-pointer border-2 border-white"
           >
-            <span className="w-6 h-6 rounded-full bg-white text-rose-600 font-mono font-black text-xs flex items-center justify-center">
+            <span className="w-5 h-5 rounded-full bg-white text-rose-600 font-mono font-bold text-[11px] flex items-center justify-center">
               {isTouchDevice ? '👆' : 'E'}
             </span>
-            <span>Make a Wish &amp; Blow Out Candles! 🎂</span>
+            <span>Make a Wish 🎂</span>
           </button>
         </div>
       )}
@@ -2121,12 +2105,12 @@ export function MuseumWalkthrough3D({
         <div className="absolute bottom-20 sm:bottom-16 left-1/2 -translate-x-1/2 z-40 pointer-events-auto max-w-[90vw]">
           <button
             onClick={() => onOpenWishes?.()}
-            className="flex items-center gap-2.5 px-6 sm:px-7 py-3 rounded-full bg-gradient-to-r from-amber-500 via-yellow-600 to-amber-600 text-white font-display font-bold text-xs sm:text-sm tracking-wider shadow-2xl hover:scale-105 transition-all cursor-pointer animate-pulse border-2 border-white"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-amber-500 text-white font-display font-bold text-xs sm:text-sm tracking-wide shadow-xl transition-all cursor-pointer border-2 border-white"
           >
-            <span className="w-6 h-6 rounded-full bg-white text-amber-700 font-mono font-black text-xs flex items-center justify-center">
+            <span className="w-5 h-5 rounded-full bg-white text-amber-700 font-mono font-bold text-[11px] flex items-center justify-center">
               {isTouchDevice ? '👆' : 'E'}
             </span>
-            <span>Open Friend Wishes &amp; Guestbook 💌</span>
+            <span>Birthday Wishes 💌</span>
           </button>
         </div>
       )}
@@ -2134,12 +2118,10 @@ export function MuseumWalkthrough3D({
       {/* ===================== CINEMATIC BIRTHDAY STORY REEL OVERLAY ===================== */}
       {isTouring && currentMovieShot && (
         <div className="absolute inset-0 pointer-events-none z-40 flex flex-col justify-between p-4 sm:p-6">
-          {/* Top Center: Recording / Playing Badge */}
+          {/* Top Center: Clean Shot Counter */}
           <div className="w-full flex items-center justify-center pointer-events-auto pt-14 sm:pt-4">
-            <div className="flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-neutral-950/85 border border-amber-500/50 backdrop-blur-md shadow-2xl text-[11px] sm:text-xs font-mono text-amber-200">
-              <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
-              <span className="font-bold tracking-wider">BIRTHDAY STORY REEL 🎬</span>
-              <span className="text-white/30">|</span>
+            <div className="flex items-center gap-2 px-3.5 py-1 rounded-full bg-neutral-950/80 border border-amber-500/40 backdrop-blur-md shadow-lg text-xs font-mono text-amber-200">
+              <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
               <span>{activeShotIndex + 1} / {movieShots.length}</span>
             </div>
           </div>
@@ -2217,17 +2199,14 @@ export function MuseumWalkthrough3D({
         </div>
       )}
 
-      {/* ===================== HEARTWARMING BIRTHDAY GIFT WELCOME CARD ===================== */}
+      {/* ===================== MINIMAL HEARTWARMING BIRTHDAY WELCOME CARD ===================== */}
       {isIntroPlaying && (
         <div
           onClick={handleOpenBirthdayMuseum}
-          className="absolute inset-0 z-50 flex flex-col justify-between p-6 sm:p-10 bg-gradient-to-b from-black/85 via-black/60 to-black/90 backdrop-blur-md select-none cursor-pointer"
+          className="absolute inset-0 z-50 flex flex-col justify-between p-6 sm:p-10 bg-black/80 backdrop-blur-md select-none cursor-pointer"
         >
-          {/* Top subtle badge */}
-          <div className="w-full flex items-center justify-between pointer-events-auto">
-            <span className="text-xs sm:text-sm font-serif tracking-wider text-amber-300 font-bold flex items-center gap-2">
-              <span>🎁</span> A Special Birthday Gift Just For You
-            </span>
+          {/* Top subtle button */}
+          <div className="w-full flex items-center justify-end pointer-events-auto">
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -2235,21 +2214,18 @@ export function MuseumWalkthrough3D({
               }}
               className="px-4 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-mono text-xs uppercase tracking-wider backdrop-blur-md transition-all active:scale-95 border border-white/20 cursor-pointer"
             >
-              Skip Intro →
+              Enter →
             </button>
           </div>
 
-          {/* Center Celebratory Title Card */}
+          {/* Center Celebratory Title */}
           <div className="text-center max-w-xl mx-auto my-auto pointer-events-none">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs sm:text-sm font-bold uppercase tracking-widest mb-4 animate-bounce">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs sm:text-sm font-bold uppercase tracking-widest mb-3 animate-bounce">
               <span>🎂</span> HAPPY BIRTHDAY! <span>🎉</span>
             </div>
             <h1 className="text-4xl sm:text-6xl font-serif font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-[#ffd700] to-amber-400 tracking-wide drop-shadow-2xl">
               {config.profile.name}
             </h1>
-            <p className="text-sm sm:text-base font-serif text-neutral-200 mt-4 leading-relaxed drop-shadow max-w-md mx-auto">
-              Welcome to your personal 3D Birthday Museum! Walk through the rooms, see your unforgettable memories, laugh at funny moments, and make a birthday wish.
-            </p>
 
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5 pointer-events-auto">
               {/* Primary: Watch Birthday Movie */}
@@ -2259,40 +2235,34 @@ export function MuseumWalkthrough3D({
                   handleOpenBirthdayMuseum();
                   if (!isTouring) onToggleTour();
                 }}
-                className="w-full sm:w-auto px-7 py-3.5 rounded-full bg-gradient-to-r from-amber-500 via-[#ffd700] to-amber-500 text-neutral-950 font-display font-black text-sm uppercase tracking-wider shadow-2xl shadow-amber-500/40 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2 border-2 border-white"
+                className="w-full sm:w-auto px-7 py-3.5 rounded-full bg-gradient-to-r from-amber-500 via-[#ffd700] to-amber-500 text-neutral-950 font-display font-black text-sm uppercase tracking-wider shadow-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2 border-2 border-white"
               >
-                <span>🎬 Watch Birthday Movie 🍿</span>
+                <span>🎬 Watch Movie</span>
               </button>
 
-              {/* Secondary: Explore Freely */}
+              {/* Secondary: Explore */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   handleOpenBirthdayMuseum();
                   if (isTouring) onToggleTour();
                 }}
-                className="w-full sm:w-auto px-6 py-3.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-display font-bold text-sm tracking-wide backdrop-blur-md transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2 border border-white/25"
+                className="w-full sm:w-auto px-7 py-3.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-display font-bold text-sm tracking-wide backdrop-blur-md transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2 border border-white/25"
               >
-                <span>🕹️ Walk &amp; Explore Freely</span>
+                <span>🕹️ Explore</span>
               </button>
             </div>
           </div>
 
-          {/* Bottom Hint & Creator Studio Link */}
+          {/* Bottom Creator Studio Link */}
           <div className="w-full text-center pointer-events-auto">
-            <p className="text-xs font-mono tracking-wider text-neutral-400">
-              {isTouchDevice ? 'Choose "Watch Birthday Movie" or "Walk & Explore Freely"' : 'Use WASD or Arrow Keys to walk · Click screen to look around'}
-            </p>
-            <div className="mt-2.5">
-              <a
-                href="./create"
-                onClick={(e) => e.stopPropagation()}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 hover:bg-white/15 text-[11px] font-mono text-amber-300 hover:text-amber-200 border border-white/10 transition-colors"
-              >
-                <span>🎨 Picture Adder &amp; Creator Studio</span>
-                <span className="text-neutral-400">· Add photos &amp; customize →</span>
-              </a>
-            </div>
+            <a
+              href="./create"
+              onClick={(e) => e.stopPropagation()}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 hover:bg-white/15 text-[11px] font-mono text-amber-300 hover:text-amber-200 border border-white/10 transition-colors"
+            >
+              <span>🎨 Add Photos &amp; Customize →</span>
+            </a>
           </div>
         </div>
       )}
@@ -2305,36 +2275,36 @@ export function MuseumWalkthrough3D({
               playDiscoverySound();
               onInspectExhibit(nearbyExhibit);
             }}
-            className="flex items-center gap-3 px-6 sm:px-8 py-3 rounded-full bg-neutral-950/90 border-2 border-[#d4af37] text-white shadow-2xl backdrop-blur-md hover:scale-105 transition-all cursor-pointer animate-pulse group"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-neutral-950/90 border-2 border-[#d4af37] text-white shadow-xl backdrop-blur-md hover:scale-105 transition-all cursor-pointer"
           >
-            <span className="w-6 h-6 rounded-md bg-[#d4af37] text-neutral-950 font-mono font-black text-xs flex items-center justify-center shadow">
+            <span className="w-5 h-5 rounded-md bg-[#d4af37] text-neutral-950 font-mono font-bold text-[11px] flex items-center justify-center">
               {isTouchDevice ? '👆' : 'E'}
             </span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               {nearbyExhibit.mediaType === 'video' || nearbyExhibit.videoUrl ? (
-                <Video className="w-4 h-4 text-rose-400 group-hover:scale-110 transition-transform" />
+                <Video className="w-4 h-4 text-rose-400" />
               ) : (
-                <ImageIcon className="w-4 h-4 text-[#d4af37] group-hover:scale-110 transition-transform" />
+                <ImageIcon className="w-4 h-4 text-amber-400" />
               )}
-              <span className="text-xs sm:text-sm font-serif font-bold text-neutral-100 truncate max-w-[240px] sm:max-w-none">
-                Examine &ldquo;{nearbyExhibit.title}&rdquo; {nearbyExhibit.date ? `(${nearbyExhibit.date})` : ''}
+              <span className="text-xs sm:text-sm font-serif font-bold text-neutral-100 truncate max-w-[200px]">
+                {nearbyExhibit.title}
               </span>
             </div>
           </button>
         </div>
       )}
 
-      {/* Desktop Hint */}
+      {/* Desktop Hint - Short & Discreet */}
       {!isLocked && !isTouring && !isTouchDevice && (
         <div
           onClick={() => {
             const canvas = document.querySelector('canvas');
             if (canvas) canvas.requestPointerLock?.();
           }}
-          className="absolute inset-0 z-20 cursor-pointer flex items-end justify-center pb-6"
+          className="absolute inset-0 z-20 cursor-pointer flex items-end justify-center pb-4"
         >
-          <div className="px-5 py-2 rounded-full bg-black/70 border border-[#c5a059]/40 text-[#c5a059] text-xs uppercase tracking-widest font-mono backdrop-blur-sm pointer-events-none shadow-md animate-pulse">
-            Click Screen to Look Around · WASD to Walk · Mouse Wheel to Zoom · [E] Interact
+          <div className="px-4 py-1.5 rounded-full bg-black/60 border border-[#c5a059]/30 text-[#dfb76c] text-[11px] font-mono backdrop-blur-sm pointer-events-none shadow-sm">
+            Click screen to look around · WASD to walk
           </div>
         </div>
       )}

@@ -97,20 +97,14 @@ export function MysteryBoxModal({
 
           {/* Header */}
           <div className="text-center mb-6">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold tracking-wider uppercase bg-[#d4af37]/20 text-[#d4af37] border border-[#d4af37]/40 mb-2">
-              <Gift className="w-3.5 h-3.5" /> Mystery Surprise Box
-            </span>
             <h2 className="text-2xl sm:text-3xl font-serif font-bold text-[#f5f0e6]">
               {box.title}
             </h2>
-            <p className="text-xs text-neutral-400 mt-1">
-              Found in: <span className="text-neutral-200 font-medium">{box.roomName}</span>
-            </p>
           </div>
 
           {!isUnwrapped ? (
             /* Wrapped Box View */
-            <div className="flex flex-col items-center justify-center py-6 text-center">
+            <div className="flex flex-col items-center justify-center py-4 text-center">
               <motion.div
                 animate={{
                   y: [0, -12, 0],
@@ -121,12 +115,12 @@ export function MysteryBoxModal({
                   duration: 2.4,
                   ease: 'easeInOut'
                 }}
-                className="relative mb-8 cursor-pointer select-none"
+                className="relative mb-6 cursor-pointer select-none"
                 onClick={handleUnwrap}
               >
                 {/* 3D Gift Box Visual Graphic */}
                 <div
-                  className="w-32 h-32 sm:w-40 sm:h-40 rounded-2xl relative shadow-2xl flex items-center justify-center border-4"
+                  className="w-32 h-32 sm:w-36 sm:h-36 rounded-2xl relative shadow-2xl flex items-center justify-center border-4"
                   style={{
                     backgroundColor: box.boxColor,
                     borderColor: box.ribbonColor
@@ -153,15 +147,11 @@ export function MysteryBoxModal({
                 </div>
               </motion.div>
 
-              <p className="text-sm text-neutral-300 max-w-sm mb-6">
-                A mysterious sealed birthday vault from the museum archives. What comical revelation or gag awaits inside?
-              </p>
-
               <button
                 onClick={handleUnwrap}
-                className="px-8 py-3.5 rounded-full bg-gradient-to-r from-amber-500 via-[#d4af37] to-amber-600 hover:from-amber-400 hover:to-amber-500 text-neutral-950 font-bold text-base shadow-lg shadow-amber-500/30 active:scale-95 transition-all flex items-center gap-2"
+                className="px-7 py-3 rounded-full bg-gradient-to-r from-amber-500 via-[#d4af37] to-amber-600 hover:from-amber-400 hover:to-amber-500 text-neutral-950 font-bold text-sm shadow-lg shadow-amber-500/30 active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
               >
-                <PartyPopper className="w-5 h-5" /> Tap to Unwrap Surprise!
+                <PartyPopper className="w-4 h-4" /> Tap to Unwrap 🎁
               </button>
             </div>
           ) : (

@@ -50,17 +50,9 @@ export function MischiefArcadeModal({
               <Gamepad2 className="w-6 h-6 animate-pulse" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl sm:text-2xl font-serif font-bold text-[#f5f0e6]">
-                  Museum Mischief Arcade
-                </h2>
-                <span className="hidden sm:inline-block px-2 py-0.5 rounded-full text-[10px] uppercase font-bold tracking-wider bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                  Special Edition
-                </span>
-              </div>
-              <p className="text-xs text-neutral-400">
-                Play hilarious mini-games & unlock archival birthday treasures
-              </p>
+              <h2 className="text-xl sm:text-2xl font-serif font-bold text-[#f5f0e6]">
+                Birthday Games 🕹️
+              </h2>
             </div>
           </div>
 
