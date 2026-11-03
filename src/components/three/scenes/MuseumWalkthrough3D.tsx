@@ -6,6 +6,7 @@ import { PointerLockControls, Float } from '@react-three/drei';
 import * as THREE from 'three';
 import confetti from 'canvas-confetti';
 import { MuseumConfig, Exhibit, ArcadeManifest, MysteryBoxItem, HiddenMemoryItem } from '@/types/museum';
+import { getAssetPath } from '@/lib/assetHelper';
 import { ArcadeCabinet3D, MysteryGiftBox3D, HiddenMemoryToken3D } from './Arcade3DElements';
 import { CinematicRoom1Environment } from '../cinematic/CinematicRoom1Environment';
 import {
@@ -775,7 +776,7 @@ function FramedArtwork({
     const loader = new THREE.TextureLoader();
     loader.setCrossOrigin('anonymous');
     loader.load(
-      exhibit.imageUrl,
+      getAssetPath(exhibit.imageUrl),
       (tex) => {
         tex.colorSpace = THREE.SRGBColorSpace;
         setTexture(tex);

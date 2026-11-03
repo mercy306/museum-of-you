@@ -2,8 +2,9 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Lock, Unlock, Calendar, Eye, Sparkles, Video, Image as ImageIcon } from 'lucide-react';
+import { X, Lock, Unlock, Calendar, Eye, Sparkles, Video, Image as ImageIcon, Volume2, VolumeX } from 'lucide-react';
 import { Exhibit } from '@/types/museum';
+import { getAssetPath } from '@/lib/assetHelper';
 
 interface ExhibitDetailModalProps {
   exhibit: Exhibit | null;
@@ -13,11 +14,14 @@ interface ExhibitDetailModalProps {
 
 export function ExhibitDetailModal({ exhibit, galleryName, onClose }: ExhibitDetailModalProps) {
   const [isDeclassified, setIsDeclassified] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
 
   if (!exhibit) return null;
 
   const isClassified = exhibit.classifiedLevel && !isDeclassified;
   const isVideo = exhibit.mediaType === 'video' || Boolean(exhibit.videoUrl);
+  const resolvedVideoUrl = getAssetPath(exhibit.videoUrl || exhibit.imageUrl);
+  const resolvedImageUrl = getAssetPath(exhibit.imageUrl);
 
   return (
     <AnimatePresence>
@@ -51,18 +55,32 @@ export function ExhibitDetailModal({ exhibit, galleryName, onClose }: ExhibitDet
               <div className="relative p-2 rounded-2xl bg-gradient-to-tr from-[#9A7B38] via-[#DFB76C] to-[#8E6E33] shadow-2xl shadow-black">
                 <div className="relative overflow-hidden rounded-xl bg-black aspect-video flex items-center justify-center">
                   {isVideo && !isClassified ? (
-                    <video
-                      src={exhibit.videoUrl || exhibit.imageUrl}
-                      poster={exhibit.imageUrl}
-                      controls
-                      autoPlay
-                      loop
-                      playsInline
-                      className="w-full h-full object-cover"
-                    />
+                    <div className="relative w-full h-full">
+                      <video
+                        src={resolvedVideoUrl}
+                        poster={resolvedImageUrl}
+                        controls
+                        autoPlay
+                        muted={isMuted}
+                        loop
+                        playsInline
+                        className="w-full h-full object-cover"
+                      />
+                      {/* Quick Unmute Toggle Pill */}
+                      {isMuted && (
+                        <button
+                          type="button"
+                          onClick={() => setIsMuted(false)}
+                          className="absolute bottom-14 right-3 z-10 px-3 py-1.5 rounded-full bg-black/80 hover:bg-black text-amber-300 border border-amber-500/50 text-xs font-medium flex items-center gap-1.5 backdrop-blur-md shadow-lg transition-transform active:scale-95 cursor-pointer"
+                        >
+                          <VolumeX className="w-3.5 h-3.5" />
+                          <span>Tap for Sound</span>
+                        </button>
+                      )}
+                    </div>
                   ) : (
                     <img
-                      src={exhibit.imageUrl}
+                      src={resolvedImageUrl}
                       alt={exhibit.title}
                       className={`w-full h-full object-cover transition-all duration-700 ${
                         isClassified ? 'blur-xl grayscale scale-105' : 'blur-0 grayscale-0 scale-100'

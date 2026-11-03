@@ -13,6 +13,23 @@ export function getMuseumConfig(): MuseumConfig {
     if (!raw) return defaultMuseumData;
     const parsed = JSON.parse(raw);
     if (!parsed?.profile?.name) return defaultMuseumData;
+    // Sanitize any dead Google sample video URLs from previous local sessions
+    if (parsed.galleries && Array.isArray(parsed.galleries)) {
+      parsed.galleries = parsed.galleries.map((gallery: any) => ({
+        ...gallery,
+        exhibits: (gallery.exhibits || []).map((ex: any) => {
+          if (
+            ex.videoUrl &&
+            (ex.videoUrl.includes('commondatastorage.googleapis.com') ||
+              ex.videoUrl.includes('gtv-videos-bucket'))
+          ) {
+            return { ...ex, videoUrl: '/videos/sample.mp4' };
+          }
+          return ex;
+        })
+      }));
+    }
+
     return {
       ...defaultMuseumData,
       ...parsed,

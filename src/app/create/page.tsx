@@ -29,6 +29,7 @@ import confetti from 'canvas-confetti';
 import { MuseumHeader } from '@/components/interface/MuseumHeader';
 import { MuseumConfig, Exhibit } from '@/types/museum';
 import { getMuseumConfig, saveMuseumConfig, resetMuseumConfig } from '@/lib/museumStore';
+import { getAssetPath } from '@/lib/assetHelper';
 
 type TabType = 'profile' | 'room1' | 'room2' | 'room3' | 'wishes' | 'audio';
 
@@ -529,7 +530,7 @@ export default function CreateMuseumPage() {
                           <div className="relative w-full h-48 rounded-xl overflow-hidden bg-neutral-950 border border-white/10 mb-4 group">
                             {ex.mediaType === 'video' && ex.videoUrl ? (
                               <video
-                                src={ex.videoUrl}
+                                src={getAssetPath(ex.videoUrl)}
                                 className="w-full h-full object-cover"
                                 controls={false}
                                 muted
