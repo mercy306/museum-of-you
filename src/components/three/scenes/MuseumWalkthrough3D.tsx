@@ -2254,17 +2254,6 @@ export function MuseumWalkthrough3D({
               </button>
             </div>
           </div>
-
-          {/* Bottom Creator Studio Link */}
-          <div className="w-full text-center pointer-events-auto">
-            <a
-              href="./create"
-              onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 hover:bg-white/15 text-[11px] font-mono text-amber-300 hover:text-amber-200 border border-white/10 transition-colors"
-            >
-              <span>🎨 Add Photos &amp; Customize →</span>
-            </a>
-          </div>
         </div>
       )}
 

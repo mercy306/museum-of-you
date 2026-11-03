@@ -30,6 +30,7 @@ import { MuseumHeader } from '@/components/interface/MuseumHeader';
 import { MuseumConfig, Exhibit } from '@/types/museum';
 import { getMuseumConfig, saveMuseumConfig, resetMuseumConfig } from '@/lib/museumStore';
 import { getAssetPath } from '@/lib/assetHelper';
+import { encodeGiftConfig } from '@/lib/giftShare';
 
 type TabType = 'profile' | 'room1' | 'room2' | 'room3' | 'wishes' | 'audio';
 
@@ -72,21 +73,36 @@ export default function CreateMuseumPage() {
     setTimeout(() => setIsSaved(false), 3500);
   };
 
-  // Copy shareable link for friends, family, and the birthday person
-  const handleCopyShareLink = () => {
-    if (typeof window === 'undefined') return;
-    const shareUrl = `${window.location.origin}${window.location.pathname.replace('/create', '/museum')}`;
-    navigator.clipboard.writeText(shareUrl).then(() => {
+  // Copy direct gift link for the birthday person (receiver only sees the museum & rooms with your photos)
+  const handleCopyShareLink = async () => {
+    if (typeof window === 'undefined' || !config) return;
+
+    try {
+      // 1. Auto-save current config first
+      saveMuseumConfig(config);
+
+      // 2. Encode config payload
+      const giftCode = await encodeGiftConfig(config);
+
+      // 3. Build pristine receiver gift URL
+      const origin = window.location.origin;
+      const pathWithoutCreate = window.location.pathname.replace(/\/create\/?$/, '');
+      const shareUrl = `${origin}${pathWithoutCreate}/museum#gift=${giftCode}`;
+
+      await navigator.clipboard.writeText(shareUrl);
       setCopySuccess(true);
       confetti({
-        particleCount: 50,
-        spread: 50,
-        origin: { y: 0.8 }
+        particleCount: 80,
+        spread: 60,
+        origin: { y: 0.8 },
+        colors: ['#ffd700', '#ff69b4', '#00e5ff', '#2ecc40']
       });
-      setTimeout(() => setCopySuccess(false), 3000);
-    }).catch(() => {
-      prompt('Copy this museum link to share:', shareUrl);
-    });
+      setTimeout(() => setCopySuccess(false), 4000);
+    } catch {
+      // Fallback if clipboard fails
+      const shareUrl = `${window.location.origin}${window.location.pathname.replace('/create', '/museum')}`;
+      prompt('Copy this Birthday Gift link for the receiver:', shareUrl);
+    }
   };
 
   // Export JSON backup
@@ -182,18 +198,64 @@ export default function CreateMuseumPage() {
     });
   };
 
-  // Handle local image file upload (converts to Base64 for offline & serverless storage)
+  // Handle local image/video upload with auto-resizing for lightweight performance & sharing
   const handleImageFileUpload = (galleryId: string, exhibitId: string, file: File) => {
     const isVid = file.type.startsWith('video/');
+
+    if (isVid) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          updateExhibit(galleryId, exhibitId, {
+            imageUrl: 'https://images.unsplash.com/photo-1518173946687-a4c8a383392e?auto=format&fit=crop&w=1200&q=80',
+            videoUrl: reader.result,
+            mediaType: 'video'
+          });
+        }
+      };
+      reader.readAsDataURL(file);
+      return;
+    }
+
+    // Auto-compress photos using HTML Canvas to keep memory fast & lightweight
     const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        updateExhibit(galleryId, exhibitId, {
-          imageUrl: isVid ? 'https://images.unsplash.com/photo-1518173946687-a4c8a383392e?auto=format&fit=crop&w=1200&q=80' : reader.result,
-          videoUrl: isVid ? reader.result : undefined,
-          mediaType: isVid ? 'video' : 'image'
-        });
-      }
+    reader.onload = (e) => {
+      const src = e.target?.result as string;
+      const img = new Image();
+      img.onload = () => {
+        const maxDim = 850;
+        let w = img.width;
+        let h = img.height;
+        if (w > maxDim || h > maxDim) {
+          if (w > h) {
+            h = Math.round((h * maxDim) / w);
+            w = maxDim;
+          } else {
+            w = Math.round((w * maxDim) / h);
+            h = maxDim;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, w, h);
+          const compressed = canvas.toDataURL('image/jpeg', 0.72);
+          updateExhibit(galleryId, exhibitId, {
+            imageUrl: compressed,
+            videoUrl: undefined,
+            mediaType: 'image'
+          });
+        } else {
+          updateExhibit(galleryId, exhibitId, {
+            imageUrl: src,
+            videoUrl: undefined,
+            mediaType: 'image'
+          });
+        }
+      };
+      img.src = src;
     };
     reader.readAsDataURL(file);
   };
@@ -268,7 +330,7 @@ export default function CreateMuseumPage() {
               Museum of <span className="text-[#ffd700]">{config.profile.name}</span>
             </h1>
             <p className="text-xs sm:text-sm text-neutral-400 mt-1 max-w-2xl leading-relaxed">
-              Add your personal pictures, videos, funny memories, and heartwarming birthday wishes. Everything you save here updates the 3D museum in real-time for your visitors!
+              Add the pictures, videos, and texts here. When you click <strong className="text-amber-300">&ldquo;Copy Gift Link&rdquo;</strong>, your friend or family member will receive a clean link showing only the front celebration and the 3D rooms filled with your photos!
             </p>
           </div>
 
@@ -276,14 +338,14 @@ export default function CreateMuseumPage() {
           <div className="flex flex-wrap items-center gap-2.5">
             <button
               onClick={handleCopyShareLink}
-              className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all shadow-md active:scale-95 cursor-pointer border ${
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-wider transition-all shadow-xl active:scale-95 cursor-pointer border-2 ${
                 copySuccess
-                  ? 'bg-emerald-500 text-neutral-950 border-white shadow-emerald-500/30'
-                  : 'bg-white/10 hover:bg-white/20 border-white/20 text-white'
+                  ? 'bg-emerald-500 text-neutral-950 border-white shadow-emerald-500/30 scale-105'
+                  : 'bg-gradient-to-r from-amber-500 via-[#ffd700] to-amber-500 text-neutral-950 border-white hover:scale-105'
               }`}
             >
-              {copySuccess ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4 text-amber-300" />}
-              <span>{copySuccess ? 'Link Copied! 🎉' : 'Copy Share Link 🔗'}</span>
+              {copySuccess ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4 text-black" />}
+              <span>{copySuccess ? 'Gift Link Copied! 🎉' : 'Copy Gift Link for Receiver 🎁'}</span>
             </button>
 
             <Link
@@ -291,15 +353,15 @@ export default function CreateMuseumPage() {
               className="flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/25 text-white text-xs font-bold uppercase tracking-wider transition-all shadow-md active:scale-95"
             >
               <ExternalLink className="w-4 h-4 text-[#ffd700]" />
-              <span>Launch Museum 🏛️</span>
+              <span>Preview 3D Museum 🏛️</span>
             </Link>
 
             <button
               onClick={handleSave}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-gradient-to-r from-amber-500 via-[#ffd700] to-amber-500 text-neutral-950 text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-amber-500/25 hover:scale-105 active:scale-95 cursor-pointer border-2 border-white"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/15 hover:bg-white/25 text-white text-xs font-bold uppercase tracking-wider transition-all shadow-md active:scale-95 cursor-pointer border border-white/20"
             >
-              <Save className="w-4 h-4" />
-              <span>Save Changes</span>
+              <Save className="w-4 h-4 text-amber-300" />
+              <span>Save</span>
             </button>
           </div>
         </div>

@@ -11,6 +11,7 @@ import { MysteryBoxModal } from '@/components/arcade/MysteryBoxModal';
 import { ScavengerHuntHUD } from '@/components/arcade/ScavengerHuntHUD';
 import { MuseumConfig, Exhibit, MysteryBoxItem, HiddenMemoryItem } from '@/types/museum';
 import { getMuseumConfig, saveMuseumConfig } from '@/lib/museumStore';
+import { decodeGiftConfig } from '@/lib/giftShare';
 import Link from 'next/link';
 import { Landmark, Mail, PlusCircle, Compass, Gamepad2, Sparkles, CheckCircle2, Film, Menu, X } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -49,7 +50,39 @@ export default function MuseumPage() {
   const [discoveredMemoryToast, setDiscoveredMemoryToast] = useState<HiddenMemoryItem | null>(null);
 
   useEffect(() => {
-    setConfig(getMuseumConfig());
+    // 1. Initial config from store
+    const initialConfig = getMuseumConfig();
+    setConfig(initialConfig);
+
+    // 2. Check if a personalized Gift Link was opened by the receiver
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash || '';
+      const search = window.location.search || '';
+      let giftCode: string | null = null;
+
+      if (hash.includes('gift=')) {
+        giftCode = hash.split('gift=')[1]?.split('&')[0];
+      } else if (search.includes('gift=')) {
+        giftCode = new URLSearchParams(search).get('gift');
+      }
+
+      if (giftCode) {
+        decodeGiftConfig(giftCode).then((giftConfig) => {
+          if (giftConfig) {
+            setConfig(giftConfig);
+            saveMuseumConfig(giftConfig);
+            // Clean URL so receiver has a pristine view
+            window.history.replaceState(null, '', window.location.pathname);
+            confetti({
+              particleCount: 75,
+              spread: 60,
+              origin: { y: 0.5 },
+              colors: ['#ffd700', '#ff69b4', '#00e5ff', '#ffa500']
+            });
+          }
+        });
+      }
+    }
 
     try {
       const savedMems = localStorage.getItem('museum_collected_memories');
@@ -179,18 +212,8 @@ export default function MuseumPage() {
               className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-xs font-medium text-white transition-all text-left cursor-pointer"
             >
               <Gamepad2 className="w-4 h-4 text-purple-400" />
-              <span>Mischief Arcade Games 🕹️</span>
+              <span>Birthday Games 🕹️</span>
             </button>
-
-            {/* Picture Adder Person / Creator Studio */}
-            <Link
-              href="/create"
-              onClick={() => setShowMenu(false)}
-              className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-xs font-medium text-amber-300 transition-all border-t border-white/10 pt-2 mt-1"
-            >
-              <PlusCircle className="w-4 h-4 text-[#ffd700]" />
-              <span>Creator Studio (Add Photos) 🎨</span>
-            </Link>
           </div>
         </div>
       )}
