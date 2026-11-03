@@ -1,4 +1,4 @@
 :HL["/museum-of-you/_next/static/chunks/1j4350p5u51lx.css","style"]
 2:[["children",{"s":"__PAGE__","h":160}]]
 1:[["children",{"s":"/_not-found","h":96,"c":"$Q2"}]]
-0:{"b":"W3be4r9YfdMsb4iyzrfln","t":{"t":{"s":"","h":80,"c":"$Q1"}}}
+0:{"b":"jRW7_HnDDnZ5rGJFLnO1Y","t":{"t":{"s":"","h":80,"c":"$Q1"}}}
