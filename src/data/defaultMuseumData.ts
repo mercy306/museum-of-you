@@ -11,8 +11,8 @@ export const defaultMuseumData: MuseumConfig = {
     age: 30,
     profilePhoto: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1200&q=80',
     welcomeMessage:
-      'Welcome to the Museum of You. A carefully curated collection of extraordinary memories, questionable decisions, unforgettable moments, and one truly irreplaceable human being.',
-    entranceSubtitle: 'An Exclusive Retrospective Exhibition · 1996 to Present',
+      'Welcome to the Museum of You. A curated 4-room architectural journey through extraordinary milestones, hilarious memories, classified embarrassing artifacts, and a grand birthday celebration.',
+    entranceSubtitle: 'A 4-Room Step-by-Step Interactive Experience · 1996 to Present',
     arrival: {
       admissionNumber: 'MOY-VIP-2026-8849',
       celebrationTitle: 'The Official 30th Birthday Retrospective',
@@ -20,18 +20,18 @@ export const defaultMuseumData: MuseumConfig = {
       receptionistTitle: 'Chief Protocol Officer & Royal Curator',
       dialogue: [
         'Ladies and gentlemen, welcome to the Museum of You.',
-        'Today we celebrate an extraordinary individual whose achievements are questionable, whose memories are unforgettable, and whose existence deserves its own museum.',
-        'Please present your VIP Admission Pass, collect your champagne glass, and prepare for an expedition through 30 magnificent years of triumph and chaos.'
+        'Today we take you on a step-by-step journey across 4 distinct exhibition rooms.',
+        'Begin in Room 1: Memorable Moments, unlock the doors to Funny Memories and Embarrassing Images, and conclude in the Grand Celebration & Wishes Hall!'
       ],
       spokenGreeting:
-        'Ladies and gentlemen, welcome to the Museum of You. Today we celebrate an extraordinary individual whose achievements are questionable, whose memories are unforgettable, and whose existence deserves its own museum.'
+        'Welcome to the Museum of You. Please open each door to progress through four rooms of unforgettable memories, hilarious fails, and grand celebrations.'
     },
     finalBirthdayLetter: {
       salutation: 'Dearest Alex,',
       body: [
         'Walking through the galleries of your life reminds everyone fortunate enough to know you of one simple truth: the world is infinitely warmer, funnier, and more adventurous with you in it.',
         'From your earliest schemes to your grandest achievements, you have navigated life with rare authenticity, an infectious laugh, and the uncanny ability to turn any quiet evening into a memorable chapter.',
-        'On your milestone 30th birthday, we built this museum not just to commemorate where you have been, but to honor who you are and celebrate every magnificent chapter yet to come.'
+        'On your milestone birthday, we built this museum not just to commemorate where you have been, but to honor who you are and celebrate every magnificent chapter yet to come.'
       ],
       closing: 'With all our love, pride, and laughter,',
       author: 'Your Lifelong Fan Club & Curators'
@@ -44,299 +44,230 @@ export const defaultMuseumData: MuseumConfig = {
   },
   galleries: [
     {
-      id: 'gallery-01',
+      id: 'gallery-memories',
       order: 1,
-      title: 'The Origin Story',
-      roomName: 'Gallery I',
-      theme: 'Childhood & Formative Years',
+      title: 'Memorable Moments',
+      roomName: 'Room 1 · Memorable Moments',
+      theme: 'Milestones, Triumphs & Cherished Adventures',
       curatorStatement:
-        'Before becoming a legend, this individual was just a small human with questionable plans, fierce determination, and zero interest in afternoon naps.',
+        'A collection of unforgettable milestones, breathtaking journeys, and proud triumphs that defined the journey so far.',
       wallColor: '#201F1D',
       lightingTone: '#F3E5AB',
       exhibits: [
         {
-          id: 'ex-01-1',
-          galleryId: 'gallery-01',
-          title: 'The Mastermind in Diapers',
-          date: 'circa 1998',
-          imageUrl: 'https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&w=1200&q=80',
-          story: 'Subject pictured moments before attempting to trade a plastic shovel for a real automobile.',
-          curatorNote: 'Historical records indicate early signs of unstoppable ambition and complete disregard for parental guidelines.',
-          aspectRatio: 'portrait'
-        },
-        {
-          id: 'ex-01-2',
-          galleryId: 'gallery-01',
-          title: 'First Day of School, Maximum Dread',
-          date: 'September 2002',
-          imageUrl: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=1200&q=80',
-          story: 'Arrived with high expectations for playground politics; severely disappointed by mandatory quiet time.',
-          curatorNote: 'Acquired first diplomatic experience negotiating snacks at the cafeteria.',
+          id: 'ex-mem-1',
+          galleryId: 'gallery-memories',
+          title: 'The Great Pacific Highway Odyssey',
+          subtitle: 'High-Spirited Roadtrip',
+          date: 'Summer 2021',
+          imageUrl: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1200&q=80',
+          videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+          mediaType: 'video',
+          story: 'Windows rolled all the way down, ocean breeze, and a 12-hour collaborative playlist that brought everyone to tears of laughter.',
+          curatorNote: 'Captured on video: pure unfiltered wanderlust and the undeniable proof that spontaneous road trips are the best therapy.',
           aspectRatio: 'landscape'
         },
         {
-          id: 'ex-01-3',
-          galleryId: 'gallery-01',
-          title: 'The Unsanctioned Living Room Fort',
-          date: 'Winter 2005',
-          imageUrl: 'https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=1200&q=80',
-          story: 'Engineered an impenetrable citadel out of all sofa cushions, kitchen chairs, and grandmother’s fine linens.',
-          curatorNote: 'Refused entry to siblings unless they possessed a valid secret password.',
-          aspectRatio: 'square'
+          id: 'ex-mem-2',
+          galleryId: 'gallery-memories',
+          title: 'Summit of Mount Rainier',
+          subtitle: 'The Sunrise Climb',
+          date: 'September 2022',
+          imageUrl: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80',
+          mediaType: 'image',
+          story: 'Woke up at 3:00 AM, climbed 4,000 feet in freezing fog, and broke into tears when the sun lit the clouds in gold.',
+          curatorNote: 'The definitive proof that this person can conquer any mountain when promised coffee and breakfast tacos at the top.',
+          aspectRatio: 'landscape'
+        },
+        {
+          id: 'ex-mem-3',
+          galleryId: 'gallery-memories',
+          title: 'The Cap & Gown Triumph',
+          subtitle: 'Graduation Day',
+          date: 'June 2019',
+          imageUrl: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=80',
+          mediaType: 'image',
+          story: 'Surviving four rigorous years fueled purely by espresso, adrenaline, and 3:00 AM study group debates.',
+          curatorNote: 'The thesis committee was stunned. The parents wept. The degree was officially awarded with distinction.',
+          aspectRatio: 'portrait'
+        },
+        {
+          id: 'ex-mem-4',
+          galleryId: 'gallery-memories',
+          title: 'Sunset on the Aegean Coast',
+          subtitle: 'Golden Hour in Santorini',
+          date: 'October 2023',
+          imageUrl: 'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=1200&q=80',
+          mediaType: 'image',
+          story: 'Leaning over whitewashed cliffside balconies watching the Mediterranean sky turn from apricot to deep violet.',
+          curatorNote: 'Rated 10/10 by the archival board for absolute serenity and cinematic perfection.',
+          aspectRatio: 'portrait'
         }
-      ],
-      guessYearGame: {
-        title: 'Chronology Challenge: Guess The Year',
-        description: 'Examine vintage photographic evidence and test your memory of this small human specimen.',
-        questions: [
-          {
-            id: 'gy-01',
-            photoUrl: 'https://images.unsplash.com/photo-1543332164-6e82f355badc?auto=format&fit=crop&w=800&q=80',
-            caption: 'Subject sporting oversized neon sunglasses and holding an unplugged rotary phone like a Fortune 500 CEO.',
-            correctYear: 1999,
-            options: [1997, 1999, 2001, 2004],
-            explanation: 'Look at this tiny human! Summer 1999. Nobody could have predicted what was coming, but the corporate swagger was already legendary.'
-          },
-          {
-            id: 'gy-02',
-            photoUrl: 'https://images.unsplash.com/photo-1472162072942-cd5147eb3902?auto=format&fit=crop&w=800&q=80',
-            caption: 'The First Solo Bicycle Expedition, seconds before steering straight into the neighbor’s prized flowerbed.',
-            correctYear: 2004,
-            options: [2001, 2004, 2006, 2009],
-            explanation: 'Spring 2004! The training wheels came off at 2:00 PM; the municipal garden was destroyed by 2:04 PM.'
-          }
-        ]
-      }
+      ]
     },
     {
-      id: 'gallery-02',
+      id: 'gallery-funny',
       order: 2,
-      title: 'The Hall of Embarrassment',
-      roomName: 'Gallery II',
-      theme: 'Questionable Decisions & Unfiltered History',
+      title: 'Funny Memories',
+      roomName: 'Room 2 · Funny Memories',
+      theme: 'Comedic Masterpieces, Fails & Laughs',
       curatorStatement:
-        'Some evidence should have remained permanently deleted. The museum archival board, after heated debate, voted to preserve it in high definition.',
+        'Life is too short to take seriously. Step inside Room 2 for the funniest, wildest, and most laugh-out-loud moments ever caught on camera.',
       wallColor: '#1A1817',
       lightingTone: '#DFB76C',
       exhibits: [
         {
-          id: 'ex-02-1',
-          galleryId: 'gallery-02',
-          title: 'The Hairstyle Incident',
-          date: 'Summer 2011',
-          imageUrl: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=1200&q=80',
-          story: 'Subject firmly believed this haircut was high fashion. The mirrors of the era respectfully disagreed.',
-          curatorNote: 'Curators have classified this artifact under "Crimes Against Barbering".',
-          aspectRatio: 'portrait',
-          classifiedLevel: 'Top Secret'
-        },
-        {
-          id: 'ex-02-2',
-          galleryId: 'gallery-02',
-          title: 'The "GPS Was Wrong" Expedition',
-          date: 'Spring Break 2017',
-          imageUrl: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1200&q=80',
-          story: 'Claimed a 45-minute shortcut that miraculously extended the journey into a 6-hour scenic crisis.',
-          curatorNote: 'Maintained unwavering confidence throughout every wrong turn.',
-          aspectRatio: 'landscape',
-          classifiedLevel: 'Confidential'
-        },
-        {
-          id: 'ex-02-3',
-          galleryId: 'gallery-02',
-          title: 'The DIY Kitchen Catastrophe',
-          date: 'October 2021',
+          id: 'ex-fun-1',
+          galleryId: 'gallery-funny',
+          title: 'The Great Kitchen Flambé Disaster',
+          subtitle: 'Chef In Training',
+          date: 'November 2022',
           imageUrl: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=1200&q=80',
-          story: 'Attempted a complex 7-layer soufflé after watching a 30-second TikTok tutorial.',
-          curatorNote: 'The smoke alarm served as an appreciative oven timer.',
-          aspectRatio: 'square',
-          classifiedLevel: 'Declassified'
+          videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+          mediaType: 'video',
+          story: 'Attempted a dramatic French chef skillet toss after watching one 30-second reel. Ended with onions on the ceiling fan.',
+          curatorNote: 'The smoke detector gave the performance a standing ovation. We ordered pizza 12 minutes later.',
+          aspectRatio: 'landscape'
+        },
+        {
+          id: 'ex-fun-2',
+          galleryId: 'gallery-funny',
+          title: 'The 9-Hour IKEA "Coffee Table"',
+          subtitle: 'Assembly Catastrophe',
+          date: 'March 2021',
+          imageUrl: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1200&q=80',
+          mediaType: 'image',
+          story: 'Proudly threw away the instruction booklet declaring "It is just 4 legs and a plank, how hard can it be?".',
+          curatorNote: 'Historical outcome: The table possessed a 15-degree tilt and 11 mysterious leftover wooden dowels.',
+          aspectRatio: 'square'
+        },
+        {
+          id: 'ex-fun-3',
+          galleryId: 'gallery-funny',
+          title: 'The Unsanctioned Living Room Fort',
+          subtitle: 'Citadel of Cushions',
+          date: 'Winter 2020',
+          imageUrl: 'https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=1200&q=80',
+          mediaType: 'image',
+          story: 'Engineered an impenetrable blanket citadel consuming every throw pillow in the house during a snowstorm.',
+          curatorNote: 'Security protocol: No entry permitted without presenting fresh chocolate chip cookies.',
+          aspectRatio: 'landscape'
+        },
+        {
+          id: 'ex-fun-4',
+          galleryId: 'gallery-funny',
+          title: 'The 3:00 AM Karaoke Solo',
+          subtitle: 'Bohemian Rhapsody Live',
+          date: 'New Year 2023',
+          imageUrl: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1200&q=80',
+          videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+          mediaType: 'video',
+          story: 'Delivered an operatic falsetto so passionately off-key that even the bartender stopped washing glasses to applaud.',
+          curatorNote: 'A tour de force of vocal enthusiasm over pitch precision. A legendary cultural moment.',
+          aspectRatio: 'portrait'
         }
-      ],
-      whoSaidThatGame: {
-        title: 'Evidence Tribunal: Who Said That?',
-        description: 'Read the incriminating quote and identify the true culprit behind these unforgettable words.',
-        questions: [
-          {
-            id: 'wst-01',
-            quote: 'I don’t need a map. I have an innate directional compass in my soul.',
-            dateOrSetting: '1:30 AM, dead-end gravel quarry 40 miles off-route.',
-            options: [
-              {
-                id: 'opt-1',
-                name: 'Alex Morgan',
-                isCorrect: true,
-                feedback: 'Correct! Unfortunately, the evidence is undeniable. The GPS wept silently that night.'
-              },
-              {
-                id: 'opt-2',
-                name: 'Christopher Columbus',
-                isCorrect: false,
-                feedback: 'Incorrect. Columbus got lost across continents, but he didn’t have Google Maps in his pocket.'
-              },
-              {
-                id: 'opt-3',
-                name: 'A Disgruntled Uber Driver',
-                isCorrect: false,
-                feedback: 'Incorrect. Even a rideshare driver would have performed a U-turn 25 miles earlier.'
-              },
-              {
-                id: 'opt-4',
-                name: 'A Golden Retriever',
-                isCorrect: false,
-                feedback: 'Incorrect. A dog would have sniffed the highway 3 miles back.'
-              }
-            ],
-            explanation: 'Alex insisted the gravel quarry was a "scenic bypass". All passengers required emotional compensation snacks.'
-          },
-          {
-            id: 'wst-02',
-            quote: 'I am only having one drink and being in bed by 10:00 PM sharp.',
-            dateOrSetting: 'Friday evening group chat, 6:45 PM.',
-            options: [
-              {
-                id: 'opt-5',
-                name: 'Alex Morgan',
-                isCorrect: true,
-                feedback: 'Correct! Followed by 3:00 AM diner pancakes and an impromptu dissertation on 90s pop music.'
-              },
-              {
-                id: 'opt-6',
-                name: 'A Tibetan Monk',
-                isCorrect: false,
-                feedback: 'Incorrect. A monk possesses discipline that Alex has never once considered.'
-              },
-              {
-                id: 'opt-7',
-                name: 'An AI Language Model',
-                isCorrect: false,
-                feedback: 'Incorrect. An AI shuts down at scheduled maintenance. Alex does not.'
-              }
-            ],
-            explanation: 'Known internationally as "The Greatest Lie in Social History". The 10:00 PM curfew was broken 47 times in a single year.'
-          }
-        ]
-      }
+      ]
     },
     {
-      id: 'gallery-03',
+      id: 'gallery-embarrassing',
       order: 3,
-      title: 'The Hall of Fame',
-      roomName: 'Gallery III',
-      theme: 'Triumphs, Talents & Accidental Brilliance',
+      title: 'Embarrassing Images',
+      roomName: 'Room 3 · Embarrassing Images',
+      theme: 'Classified Artifacts, Awkward Phases & Cringe History',
       curatorStatement:
-        'An extremely rare specimen of human excellence. Occasionally unavailable due to laziness, but unstoppable when motivated.',
-      wallColor: '#191C1E',
+        'WARNING: Entering the Classified Archival Vault. The board voted 5-to-1 to preserve these cringe artifacts for educational amusement.',
+      wallColor: '#121110',
+      lightingTone: '#C5A059',
+      exhibits: [
+        {
+          id: 'ex-emb-1',
+          galleryId: 'gallery-embarrassing',
+          title: 'The 2008 Scene Haircut Tragedy',
+          subtitle: 'Crimes Against Barbering',
+          date: 'August 2008',
+          imageUrl: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=1200&q=80',
+          mediaType: 'image',
+          classifiedLevel: 'Top Secret',
+          story: 'Subject firmly believed this asymmetric razor-cut side fringe was peak runway fashion. The family album mourns.',
+          curatorNote: 'Requires Level 4 Security Clearance. An estimated 1.5 bottles of hair gel were sacrificed daily.',
+          aspectRatio: 'portrait'
+        },
+        {
+          id: 'ex-emb-2',
+          galleryId: 'gallery-embarrassing',
+          title: 'The Backyard Slip-N-Slide Faceplant',
+          subtitle: 'Epic Fail Caught on 4K',
+          date: 'July 2018',
+          imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
+          videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+          mediaType: 'video',
+          classifiedLevel: 'Top Secret',
+          story: 'A confident 20-meter sprint followed by an immediate aquatic physics miscalculation and graceful yard slide.',
+          curatorNote: 'The judges awarded 10/10 for dramatic height, and 2/10 for hydrodynamic execution.',
+          aspectRatio: 'landscape'
+        },
+        {
+          id: 'ex-emb-3',
+          galleryId: 'gallery-embarrassing',
+          title: 'The 2:15 AM Refrigerator Raid',
+          subtitle: 'Caught in the Cold Glow',
+          date: 'October 2021',
+          imageUrl: 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=1200&q=80',
+          mediaType: 'image',
+          classifiedLevel: 'Confidential',
+          story: 'Pictured eating shredded cheese straight from the bag while wearing dinosaur flannel pajamas.',
+          curatorNote: 'Eyes wide like a nocturnal raccoon startled by human contact. A pristine specimen of domestic snacking.',
+          aspectRatio: 'landscape'
+        },
+        {
+          id: 'ex-emb-4',
+          galleryId: 'gallery-embarrassing',
+          title: 'The Middle School Yearbook Pose',
+          subtitle: 'Peak Awkwardness',
+          date: 'Fall 2010',
+          imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1200&q=80',
+          mediaType: 'image',
+          classifiedLevel: 'Declassified',
+          story: 'Braces, oversized collared shirt, and a forced thumbs-up against a digital neon laser backdrop.',
+          curatorNote: 'Declassified by popular demand. We love you anyway.',
+          aspectRatio: 'portrait'
+        }
+      ]
+    },
+    {
+      id: 'gallery-celebration',
+      order: 4,
+      title: 'Wishes & Celebration',
+      roomName: 'Room 4 · Wishes & Grand Celebration',
+      theme: 'Birthday Cake, Friends Wishes & Fireworks',
+      curatorStatement:
+        'The climax of the museum experience! Walk forward into the grand celebration hall, blow out the birthday candles, and read wishes from the people who love you.',
+      wallColor: '#101012',
       lightingTone: '#FDE08B',
       exhibits: [
         {
-          id: 'ex-03-1',
-          galleryId: 'gallery-03',
-          title: 'The Magna Cum Loudly',
-          date: 'June 2019',
-          imageUrl: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=80',
-          story: 'Graduation day. Finished all requirements with minimal panic, maximum espresso intake, and legendary thesis defense.',
-          curatorNote: 'Proof that pulling off miracles at 3:00 AM is indeed an accredited discipline.',
-          aspectRatio: 'landscape'
-        },
-        {
-          id: 'ex-03-2',
-          galleryId: 'gallery-03',
-          title: 'The Unofficial Karaoke Laureate',
-          date: 'December 2022',
-          imageUrl: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1200&q=80',
-          story: 'Delivered a rendition of Bohemian Rhapsody so passionately off-key that the venue staff paused to applaud the bravery.',
-          curatorNote: 'Pitched perfectly between musical theater and sheer comedic genius.',
-          aspectRatio: 'portrait'
-        }
-      ]
-    },
-    {
-      id: 'gallery-04',
-      order: 4,
-      title: 'The Personality Laboratory',
-      roomName: 'Gallery IV',
-      theme: 'Habits, Quirks & Scientific Inconsistencies',
-      curatorStatement:
-        'Research conclusion: This person is difficult to explain scientifically. Key drivers include iced matcha, spontaneous dance breaks, and 47 unclosed browser tabs.',
-      wallColor: '#1B1918',
-      lightingTone: '#EAC585',
-      exhibits: [
-        {
-          id: 'ex-04-1',
-          galleryId: 'gallery-04',
-          title: 'Specimen: "I Will Be Ready in 5 Minutes"',
-          date: 'Ongoing Phenomenon',
-          imageUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=1200&q=80',
-          story: 'A standard temporal paradox where 5 earthly minutes equal approximately 42 minutes in subject time.',
-          curatorNote: 'Theoretical physicists around the globe continue to study this localized time distortion.',
-          aspectRatio: 'portrait'
-        },
-        {
-          id: 'ex-04-2',
-          galleryId: 'gallery-04',
-          title: 'Culinary Masterpiece: Midnight Cheese Board',
-          date: 'Nightly Exhibit',
-          imageUrl: 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=1200&q=80',
-          story: 'Expertly assembled snacks consumed under the golden hum of the open refrigerator door.',
-          curatorNote: 'A three-star Michelin experience created strictly in pajamas.',
-          aspectRatio: 'landscape'
-        }
-      ]
-    },
-    {
-      id: 'gallery-05',
-      order: 5,
-      title: 'The Future Wing',
-      roomName: 'Gallery V',
-      theme: 'Dreams, Speculations & Grand Horizons',
-      curatorStatement:
-        'Predicted future: Rich, deeply content, universally beloved, and still asking close friends what to order for dinner.',
-      wallColor: '#16191B',
-      lightingTone: '#E1C48C',
-      exhibits: [
-        {
-          id: 'ex-05-1',
-          galleryId: 'gallery-05',
-          title: 'The Mediterranean Villa Blueprint',
-          date: 'Forecast 2030',
-          imageUrl: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80',
-          story: 'Subject holding court on a sun-drenched terrace with an army of rescue dogs and endless pastries.',
-          curatorNote: 'Guest suites have already been booked indefinitely for the founding curators.',
-          aspectRatio: 'landscape'
-        },
-        {
-          id: 'ex-05-2',
-          galleryId: 'gallery-05',
-          title: 'Nobel Peace Prize in Group Chat Harmony',
-          date: 'Forecast 2035',
-          imageUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=1200&q=80',
-          story: 'Honored internationally for defusing tense debates through perfectly timed reaction memes.',
-          curatorNote: 'A humanitarian contribution of unprecedented digital scale.',
-          aspectRatio: 'portrait'
-        }
-      ]
-    },
-    {
-      id: 'gallery-06',
-      order: 6,
-      title: 'The Final Masterpiece',
-      roomName: 'Gallery VI (The Rotunda)',
-      theme: 'The Birthday Celebration & Living Tribute',
-      curatorStatement:
-        'Some people are not replaceable. This is one of them. The cornerstone of the museum and the heart of this celebration.',
-      wallColor: '#121214',
-      lightingTone: '#F8DC96',
-      exhibits: [
-        {
-          id: 'ex-06-1',
-          galleryId: 'gallery-06',
-          title: 'The Milestone Portrait',
+          id: 'ex-cel-1',
+          galleryId: 'gallery-celebration',
+          title: 'The Milestone Birthday Portrait',
+          subtitle: 'The Guest of Honor',
           date: 'Present Day',
           imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1200&q=80',
-          story: 'Surrounded by the memories of thirty incredible years and standing at the precipice of an even greater future.',
+          mediaType: 'image',
+          story: 'Surrounded by the warmth of friends, incredible memories, and countless adventures still waiting to unfold.',
           curatorNote: 'Permanent Collection · Unconditional Gift from Everyone Who Loves You.',
           aspectRatio: 'portrait'
+        },
+        {
+          id: 'ex-cel-2',
+          galleryId: 'gallery-celebration',
+          title: 'The Grand Champagne Toast',
+          subtitle: 'A Toast to the Next 30 Years',
+          date: 'Tonight',
+          imageUrl: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=1200&q=80',
+          mediaType: 'image',
+          story: 'Raising glasses of chilled vintage champagne to the irreplaceable human who brings laughter to every room they enter.',
+          curatorNote: 'To good health, ridiculous ambitions, and unforgettable evenings.',
+          aspectRatio: 'landscape'
         }
       ]
     }

@@ -5,6 +5,8 @@ export interface Exhibit {
   subtitle?: string;
   date?: string;
   imageUrl: string;
+  videoUrl?: string;
+  mediaType?: 'image' | 'video';
   story: string;
   curatorNote: string;
   aspectRatio?: 'square' | 'portrait' | 'landscape';
