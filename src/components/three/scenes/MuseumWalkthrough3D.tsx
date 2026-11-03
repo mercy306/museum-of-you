@@ -283,14 +283,26 @@ function PlayerController({
   return null;
 }
 
-// Interactive Architectural Real Double Door with Brass Trim & Overhead Glowing Plaque
-function InteractiveDoubleDoor({
-  position,
+// UNIFIED ARCHITECTURAL PARTITION WALL WITH EMBEDDED REAL DOUBLE DOOR
+function ArchitecturalPartitionWallWithDoor({
+  z,
+  width = 18,
+  height = 5.8,
+  wallThickness = 0.35,
+  doorWidth = 2.8,
+  doorHeight = 3.5,
+  wallColor = '#f5f4ef',
   isOpen,
   roomTitle,
   roomNumber
 }: {
-  position: [number, number, number];
+  z: number;
+  width?: number;
+  height?: number;
+  wallThickness?: number;
+  doorWidth?: number;
+  doorHeight?: number;
+  wallColor?: string;
   isOpen: boolean;
   roomTitle: string;
   roomNumber: number;
@@ -318,6 +330,14 @@ function InteractiveDoubleDoor({
     }
   });
 
+  // Calculate solid wall dimensions flanking the doorway
+  const sideWidth = (width - doorWidth) / 2; // (18 - 2.8) / 2 = 7.6
+  const leftCenterX = -width / 2 + sideWidth / 2; // -9 + 3.8 = -5.2
+  const rightCenterX = width / 2 - sideWidth / 2; // 9 - 3.8 = +5.2
+  const lintelHeight = height - doorHeight; // 5.8 - 3.5 = 2.3
+  const lintelCenterY = doorHeight + lintelHeight / 2; // 3.5 + 1.15 = 4.65
+
+  // Generate Plaque Texture for the Room Header
   const plaqueTexture = useMemo(() => {
     if (typeof window === 'undefined') return null;
     const canvas = document.createElement('canvas');
@@ -347,96 +367,162 @@ function InteractiveDoubleDoor({
   }, [roomNumber, roomTitle]);
 
   return (
-    <group position={position}>
-      {/* Outer Door Frame Posts */}
-      <mesh position={[-1.4, 1.75, 0]} castShadow>
-        <boxGeometry args={[0.16, 3.5, 0.24]} />
-        <meshStandardMaterial color="#2c221a" roughness={0.4} />
+    <group position={[0, 0, z]}>
+      {/* 1. SOLID LEFT WALL BLOCK */}
+      <mesh position={[leftCenterX, height / 2, 0]} castShadow receiveShadow>
+        <boxGeometry args={[sideWidth, height, wallThickness]} />
+        <meshStandardMaterial color={wallColor} roughness={0.4} />
       </mesh>
-      <mesh position={[1.4, 1.75, 0]} castShadow>
-        <boxGeometry args={[0.16, 3.5, 0.24]} />
-        <meshStandardMaterial color="#2c221a" roughness={0.4} />
+      {/* Dark Walnut Baseboard Trim (Both Sides) */}
+      <mesh position={[leftCenterX, 0.08, 0]}>
+        <boxGeometry args={[sideWidth, 0.16, wallThickness + 0.04]} />
+        <meshStandardMaterial color="#2c221a" roughness={0.5} />
       </mesh>
-      {/* Top Lintel Architrave */}
-      <mesh position={[0, 3.55, 0]} castShadow>
-        <boxGeometry args={[3.0, 0.22, 0.28]} />
-        <meshStandardMaterial color="#2c221a" roughness={0.4} />
+
+      {/* 2. SOLID RIGHT WALL BLOCK */}
+      <mesh position={[rightCenterX, height / 2, 0]} castShadow receiveShadow>
+        <boxGeometry args={[sideWidth, height, wallThickness]} />
+        <meshStandardMaterial color={wallColor} roughness={0.4} />
       </mesh>
-      {/* Floor Threshold Bar */}
+      {/* Dark Walnut Baseboard Trim (Both Sides) */}
+      <mesh position={[rightCenterX, 0.08, 0]}>
+        <boxGeometry args={[sideWidth, 0.16, wallThickness + 0.04]} />
+        <meshStandardMaterial color="#2c221a" roughness={0.5} />
+      </mesh>
+
+      {/* 3. SOLID LINTEL WALL BLOCK ABOVE DOORWAY */}
+      <mesh position={[0, lintelCenterY, 0]} castShadow receiveShadow>
+        <boxGeometry args={[doorWidth, lintelHeight, wallThickness]} />
+        <meshStandardMaterial color={wallColor} roughness={0.4} />
+      </mesh>
+
+      {/* 4. SOLID DOORWAY ARCHITRAVE / CASING (Embedded flush with the wall) */}
+      {/* Left Frame Post */}
+      <mesh position={[-doorWidth / 2, doorHeight / 2, 0]} castShadow>
+        <boxGeometry args={[0.18, doorHeight, wallThickness + 0.06]} />
+        <meshStandardMaterial color="#2c221a" roughness={0.35} />
+      </mesh>
+      {/* Right Frame Post */}
+      <mesh position={[doorWidth / 2, doorHeight / 2, 0]} castShadow>
+        <boxGeometry args={[0.18, doorHeight, wallThickness + 0.06]} />
+        <meshStandardMaterial color="#2c221a" roughness={0.35} />
+      </mesh>
+      {/* Top Frame Architrave Header */}
+      <mesh position={[0, doorHeight + 0.09, 0]} castShadow>
+        <boxGeometry args={[doorWidth + 0.36, 0.18, wallThickness + 0.08]} />
+        <meshStandardMaterial color="#2c221a" roughness={0.35} />
+      </mesh>
+      {/* Floor Threshold Bar in Brass */}
       <mesh position={[0, 0.02, 0]}>
-        <boxGeometry args={[2.8, 0.04, 0.32]} />
+        <boxGeometry args={[doorWidth + 0.1, 0.04, wallThickness + 0.08]} />
         <meshStandardMaterial color="#c5a059" metalness={0.8} roughness={0.3} />
       </mesh>
 
-      {/* Overhead Brass Plaque */}
-      <group position={[0, 3.9, 0]}>
+      {/* Recessed Warm Downlight in Doorway Lintel */}
+      <pointLight position={[0, doorHeight - 0.1, 0]} intensity={12} distance={3.5} color="#ffe2aa" />
+
+      {/* 5. OVERHEAD BRASS ROOM SIGN (Mounted on Wall above Architrave) */}
+      {/* South Facing Plaque (viewed from preceding room) */}
+      <group position={[0, doorHeight + 0.55, wallThickness / 2 + 0.02]}>
         <mesh castShadow>
-          <boxGeometry args={[2.2, 0.55, 0.06]} />
+          <boxGeometry args={[2.2, 0.55, 0.04]} />
           <meshStandardMaterial color="#c5a059" metalness={0.85} roughness={0.3} />
         </mesh>
-        <mesh position={[0, 0, 0.035]}>
+        <mesh position={[0, 0, 0.025]}>
           <planeGeometry args={[2.1, 0.48]} />
           {plaqueTexture && <meshBasicMaterial map={plaqueTexture} />}
         </mesh>
-        {/* Plaque back light */}
-        <pointLight position={[0, 0.1, 0.4]} intensity={8} distance={2.5} color="#ffeaa7" />
+        <pointLight position={[0, 0.1, 0.35]} intensity={8} distance={2.5} color="#ffeaa7" />
       </group>
 
-      {/* Left Door Leaf */}
-      <group ref={leftHingeRef} position={[-1.32, 0, 0]}>
-        <group position={[0.66, 1.7, 0]}>
+      {/* North Facing Plaque (viewed looking back from inside the room) */}
+      <group position={[0, doorHeight + 0.55, -wallThickness / 2 - 0.02]} rotation={[0, Math.PI, 0]}>
+        <mesh castShadow>
+          <boxGeometry args={[2.2, 0.55, 0.04]} />
+          <meshStandardMaterial color="#c5a059" metalness={0.85} roughness={0.3} />
+        </mesh>
+        <mesh position={[0, 0, 0.025]}>
+          <planeGeometry args={[2.1, 0.48]} />
+          {plaqueTexture && <meshBasicMaterial map={plaqueTexture} />}
+        </mesh>
+        <pointLight position={[0, 0.1, 0.35]} intensity={8} distance={2.5} color="#ffeaa7" />
+      </group>
+
+      {/* 6. LEFT DOOR LEAF */}
+      <group ref={leftHingeRef} position={[-doorWidth / 2 + 0.09, 0, 0]}>
+        <group position={[doorWidth / 4 - 0.045, doorHeight / 2, 0]}>
           {/* Main Solid Wood Door Slab */}
           <mesh castShadow receiveShadow>
-            <boxGeometry args={[1.32, 3.35, 0.08]} />
+            <boxGeometry args={[doorWidth / 2 - 0.09, doorHeight - 0.08, 0.08]} />
             <meshStandardMaterial color="#3b2b20" roughness={0.35} />
           </mesh>
-          {/* Luxury Recessed Door Panels */}
+          {/* Beveled Luxury Panels */}
           {[-0.8, 0.2, 1.0].map((yOff, pIdx) => (
-            <mesh key={pIdx} position={[0, yOff, 0.042]}>
-              <boxGeometry args={[1.0, 0.65, 0.02]} />
-              <meshStandardMaterial color="#2e2118" roughness={0.4} />
-            </mesh>
+            <React.Fragment key={pIdx}>
+              {/* Front Face Panel */}
+              <mesh position={[0, yOff, 0.042]}>
+                <boxGeometry args={[doorWidth / 2 - 0.36, 0.65, 0.02]} />
+                <meshStandardMaterial color="#2e2118" roughness={0.4} />
+              </mesh>
+              {/* Back Face Panel */}
+              <mesh position={[0, yOff, -0.042]}>
+                <boxGeometry args={[doorWidth / 2 - 0.36, 0.65, 0.02]} />
+                <meshStandardMaterial color="#2e2118" roughness={0.4} />
+              </mesh>
+            </React.Fragment>
           ))}
-          {/* Brass Lever Handle */}
-          <group position={[0.5, -0.15, 0.06]}>
-            <mesh rotation={[0, 0, 0]}>
-              <cylinderGeometry args={[0.025, 0.025, 0.02, 12]} />
-              <meshStandardMaterial color="#c5a059" metalness={0.9} roughness={0.2} />
-            </mesh>
-            <mesh position={[-0.08, 0, 0.03]} rotation={[0, 0, Math.PI / 2]}>
-              <cylinderGeometry args={[0.012, 0.012, 0.14, 8]} />
-              <meshStandardMaterial color="#c5a059" metalness={0.9} roughness={0.2} />
-            </mesh>
-          </group>
+          {/* Brass Lever Handle (Both Sides) */}
+          {[-0.05, 0.05].map((zHandle, hi) => (
+            <group key={hi} position={[doorWidth / 4 - 0.22, -0.15, zHandle]}>
+              <mesh rotation={[0, 0, 0]}>
+                <cylinderGeometry args={[0.025, 0.025, 0.02, 12]} />
+                <meshStandardMaterial color="#c5a059" metalness={0.9} roughness={0.2} />
+              </mesh>
+              <mesh position={[-0.08, 0, hi === 0 ? -0.02 : 0.02]} rotation={[0, 0, Math.PI / 2]}>
+                <cylinderGeometry args={[0.012, 0.012, 0.14, 8]} />
+                <meshStandardMaterial color="#c5a059" metalness={0.9} roughness={0.2} />
+              </mesh>
+            </group>
+          ))}
         </group>
       </group>
 
-      {/* Right Door Leaf */}
-      <group ref={rightHingeRef} position={[1.32, 0, 0]}>
-        <group position={[-0.66, 1.7, 0]}>
+      {/* 7. RIGHT DOOR LEAF */}
+      <group ref={rightHingeRef} position={[doorWidth / 2 - 0.09, 0, 0]}>
+        <group position={[-(doorWidth / 4 - 0.045), doorHeight / 2, 0]}>
           {/* Main Solid Wood Door Slab */}
           <mesh castShadow receiveShadow>
-            <boxGeometry args={[1.32, 3.35, 0.08]} />
+            <boxGeometry args={[doorWidth / 2 - 0.09, doorHeight - 0.08, 0.08]} />
             <meshStandardMaterial color="#3b2b20" roughness={0.35} />
           </mesh>
-          {/* Luxury Recessed Door Panels */}
+          {/* Beveled Luxury Panels */}
           {[-0.8, 0.2, 1.0].map((yOff, pIdx) => (
-            <mesh key={pIdx} position={[0, yOff, 0.042]}>
-              <boxGeometry args={[1.0, 0.65, 0.02]} />
-              <meshStandardMaterial color="#2e2118" roughness={0.4} />
-            </mesh>
+            <React.Fragment key={pIdx}>
+              {/* Front Face Panel */}
+              <mesh position={[0, yOff, 0.042]}>
+                <boxGeometry args={[doorWidth / 2 - 0.36, 0.65, 0.02]} />
+                <meshStandardMaterial color="#2e2118" roughness={0.4} />
+              </mesh>
+              {/* Back Face Panel */}
+              <mesh position={[0, yOff, -0.042]}>
+                <boxGeometry args={[doorWidth / 2 - 0.36, 0.65, 0.02]} />
+                <meshStandardMaterial color="#2e2118" roughness={0.4} />
+              </mesh>
+            </React.Fragment>
           ))}
-          {/* Brass Lever Handle */}
-          <group position={[-0.5, -0.15, 0.06]}>
-            <mesh rotation={[0, 0, 0]}>
-              <cylinderGeometry args={[0.025, 0.025, 0.02, 12]} />
-              <meshStandardMaterial color="#c5a059" metalness={0.9} roughness={0.2} />
-            </mesh>
-            <mesh position={[0.08, 0, 0.03]} rotation={[0, 0, Math.PI / 2]}>
-              <cylinderGeometry args={[0.012, 0.012, 0.14, 8]} />
-              <meshStandardMaterial color="#c5a059" metalness={0.9} roughness={0.2} />
-            </mesh>
-          </group>
+          {/* Brass Lever Handle (Both Sides) */}
+          {[-0.05, 0.05].map((zHandle, hi) => (
+            <group key={hi} position={[-(doorWidth / 4 - 0.22), -0.15, zHandle]}>
+              <mesh rotation={[0, 0, 0]}>
+                <cylinderGeometry args={[0.025, 0.025, 0.02, 12]} />
+                <meshStandardMaterial color="#c5a059" metalness={0.9} roughness={0.2} />
+              </mesh>
+              <mesh position={[0.08, 0, hi === 0 ? -0.02 : 0.02]} rotation={[0, 0, Math.PI / 2]}>
+                <cylinderGeometry args={[0.012, 0.012, 0.14, 8]} />
+                <meshStandardMaterial color="#c5a059" metalness={0.9} roughness={0.2} />
+              </mesh>
+            </group>
+          ))}
         </group>
       </group>
     </group>
@@ -602,7 +688,7 @@ function CelebrationBalloons({ position }: { position: [number, number, number] 
   );
 }
 
-// 4-Room Luxury Villa Architecture
+// 4-Room Luxury Villa Architecture with SOLID 3D WALLS and INTEGRATED DOORS
 function LuxuryVillaStepByStepArchitecture({
   doors,
   candlesBlown
@@ -654,13 +740,14 @@ function LuxuryVillaStepByStepArchitecture({
         color: '#d4aa7d',
         map: oakFloorTexture || undefined,
         roughness: 0.35,
-        metalness: 0.05
+        metalness: 0.05,
+        side: THREE.DoubleSide
       }),
-      room1Wall: new THREE.MeshStandardMaterial({ color: '#f7f6f2', roughness: 0.4 }),
-      room2Wall: new THREE.MeshStandardMaterial({ color: '#f3efe6', roughness: 0.4 }),
-      room3Wall: new THREE.MeshStandardMaterial({ color: '#1a1918', roughness: 0.5 }), // Moody classified gallery
-      room4Wall: new THREE.MeshStandardMaterial({ color: '#f8f6f0', roughness: 0.35 }),
-      ceilingWhite: new THREE.MeshStandardMaterial({ color: '#fcfcfc', roughness: 0.5 }),
+      room1Wall: new THREE.MeshStandardMaterial({ color: '#f7f6f2', roughness: 0.4, side: THREE.DoubleSide }),
+      room2Wall: new THREE.MeshStandardMaterial({ color: '#f3efe6', roughness: 0.4, side: THREE.DoubleSide }),
+      room3Wall: new THREE.MeshStandardMaterial({ color: '#1a1918', roughness: 0.5, side: THREE.DoubleSide }), // Moody classified gallery
+      room4Wall: new THREE.MeshStandardMaterial({ color: '#f8f6f0', roughness: 0.35, side: THREE.DoubleSide }),
+      ceilingWhite: new THREE.MeshStandardMaterial({ color: '#fcfcfc', roughness: 0.5, side: THREE.DoubleSide }),
       cakeIcing: new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.25 })
     };
   }, [oakFloorTexture]);
@@ -722,20 +809,23 @@ function LuxuryVillaStepByStepArchitecture({
       </mesh>
 
       {/* South Wall (Panoramic Glass Wall looking out at pool) */}
-      <mesh position={[0, 2.9, 4]} material={materials.ceilingWhite}>
-        <planeGeometry args={[18, 0.4]} />
+      <mesh position={[0, 5.6, 4]}>
+        <boxGeometry args={[18, 0.4, 0.2]} />
+        <meshStandardMaterial color="#1c1b18" roughness={0.3} />
       </mesh>
-      <mesh position={[0, 2.9, 4]}>
-        <planeGeometry args={[18, 5.4]} />
-        <meshPhysicalMaterial color="#e8f6ff" transmission={0.9} transparent opacity={0.3} roughness={0.05} />
+      <mesh position={[0, 2.8, 4]}>
+        <planeGeometry args={[18, 5.6]} />
+        <meshPhysicalMaterial color="#e8f6ff" transmission={0.92} transparent opacity={0.3} roughness={0.05} side={THREE.DoubleSide} />
       </mesh>
 
-      {/* West & East Side Walls */}
-      <mesh position={[-9, 2.9, -5]} rotation={[0, Math.PI / 2, 0]} material={materials.room1Wall}>
-        <planeGeometry args={[18, 5.8]} />
+      {/* SOLID West & East Side Walls in Room 1 */}
+      <mesh position={[-9, 2.9, -5]} castShadow receiveShadow>
+        <boxGeometry args={[0.35, 5.8, 18]} />
+        <meshStandardMaterial color="#f7f6f2" roughness={0.4} />
       </mesh>
-      <mesh position={[9, 2.9, -5]} rotation={[0, -Math.PI / 2, 0]} material={materials.room1Wall}>
-        <planeGeometry args={[18, 5.8]} />
+      <mesh position={[9, 2.9, -5]} castShadow receiveShadow>
+        <boxGeometry args={[0.35, 5.8, 18]} />
+        <meshStandardMaterial color="#f7f6f2" roughness={0.4} />
       </mesh>
 
       {/* Room 1 Furniture: Area Rug & Modern Linear Fireplace */}
@@ -744,20 +834,15 @@ function LuxuryVillaStepByStepArchitecture({
         <meshStandardMaterial color="#edeae1" roughness={0.9} />
       </mesh>
 
-      {/* North Partition Wall to Room 2 with Doorway opening */}
-      <mesh position={[-5.3, 2.9, -14]} material={materials.room1Wall}>
-        <planeGeometry args={[7.4, 5.8]} />
-      </mesh>
-      <mesh position={[5.3, 2.9, -14]} material={materials.room1Wall}>
-        <planeGeometry args={[7.4, 5.8]} />
-      </mesh>
-      <mesh position={[0, 4.85, -14]} material={materials.room1Wall}>
-        <planeGeometry args={[3.2, 1.9]} />
-      </mesh>
-
-      {/* DOOR 1 -> 2 */}
-      <InteractiveDoubleDoor
-        position={[0, 0, -14]}
+      {/* COMPLETE SOLID PARTITION WALL 1 WITH EMBEDDED DOOR (Room 1 -> Room 2 at Z = -14) */}
+      <ArchitecturalPartitionWallWithDoor
+        z={-14}
+        width={18}
+        height={5.8}
+        wallThickness={0.35}
+        doorWidth={2.8}
+        doorHeight={3.5}
+        wallColor="#f7f6f2"
         isOpen={doors.door1}
         roomTitle="Funny Memories"
         roomNumber={2}
@@ -772,12 +857,14 @@ function LuxuryVillaStepByStepArchitecture({
         <planeGeometry args={[18, 22]} />
       </mesh>
 
-      {/* West & East Side Walls */}
-      <mesh position={[-9, 2.9, -25]} rotation={[0, Math.PI / 2, 0]} material={materials.room2Wall}>
-        <planeGeometry args={[22, 5.8]} />
+      {/* SOLID West & East Side Walls in Room 2 */}
+      <mesh position={[-9, 2.9, -25]} castShadow receiveShadow>
+        <boxGeometry args={[0.35, 5.8, 22]} />
+        <meshStandardMaterial color="#f3efe6" roughness={0.4} />
       </mesh>
-      <mesh position={[9, 2.9, -25]} rotation={[0, -Math.PI / 2, 0]} material={materials.room2Wall}>
-        <planeGeometry args={[22, 5.8]} />
+      <mesh position={[9, 2.9, -25]} castShadow receiveShadow>
+        <boxGeometry args={[0.35, 5.8, 22]} />
+        <meshStandardMaterial color="#f3efe6" roughness={0.4} />
       </mesh>
 
       {/* Center Vitrine Table with Comedic Relics in Room 2 */}
@@ -793,61 +880,53 @@ function LuxuryVillaStepByStepArchitecture({
         <pointLight position={[0, 1.1, 0]} intensity={12} distance={3} color="#ffd166" />
       </group>
 
-      {/* North Partition Wall to Room 3 with Doorway opening */}
-      <mesh position={[-5.3, 2.9, -36]} material={materials.room2Wall}>
-        <planeGeometry args={[7.4, 5.8]} />
-      </mesh>
-      <mesh position={[5.3, 2.9, -36]} material={materials.room2Wall}>
-        <planeGeometry args={[7.4, 5.8]} />
-      </mesh>
-      <mesh position={[0, 4.85, -36]} material={materials.room2Wall}>
-        <planeGeometry args={[3.2, 1.9]} />
-      </mesh>
-
-      {/* DOOR 2 -> 3 */}
-      <InteractiveDoubleDoor
-        position={[0, 0, -36]}
+      {/* COMPLETE SOLID PARTITION WALL 2 WITH EMBEDDED DOOR (Room 2 -> Room 3 at Z = -36) */}
+      <ArchitecturalPartitionWallWithDoor
+        z={-36}
+        width={18}
+        height={5.8}
+        wallThickness={0.35}
+        doorWidth={2.8}
+        doorHeight={3.5}
+        wallColor="#f3efe6"
         isOpen={doors.door2}
         roomTitle="Embarrassing Images"
         roomNumber={3}
       />
 
       {/* ===================== ROOM 3: EMBARRASSING IMAGES (Z: -36 to -58) ===================== */}
-      {/* Ambiance: Moody Classified Vault */}
+      {/* Floor & Ceiling (Moody Dark Gallery Ambiance) */}
       <mesh position={[0, 0, -47]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow material={materials.warmOakFloor}>
         <planeGeometry args={[18, 22]} />
       </mesh>
-      <mesh position={[0, 5.8, -47]} rotation={[Math.PI / 2, 0, 0]} material={materials.room3Wall}>
+      <mesh position={[0, 5.8, -47]} rotation={[Math.PI / 2, 0, 0]} material={materials.ceilingWhite}>
         <planeGeometry args={[18, 22]} />
       </mesh>
 
-      {/* West & East Side Walls (Moody Dark Gallery) */}
-      <mesh position={[-9, 2.9, -47]} rotation={[0, Math.PI / 2, 0]} material={materials.room3Wall}>
-        <planeGeometry args={[22, 5.8]} />
+      {/* SOLID West & East Side Walls in Room 3 (Moody Obsidian) */}
+      <mesh position={[-9, 2.9, -47]} castShadow receiveShadow>
+        <boxGeometry args={[0.35, 5.8, 22]} />
+        <meshStandardMaterial color="#1a1918" roughness={0.5} />
       </mesh>
-      <mesh position={[9, 2.9, -47]} rotation={[0, -Math.PI / 2, 0]} material={materials.room3Wall}>
-        <planeGeometry args={[22, 5.8]} />
+      <mesh position={[9, 2.9, -47]} castShadow receiveShadow>
+        <boxGeometry args={[0.35, 5.8, 22]} />
+        <meshStandardMaterial color="#1a1918" roughness={0.5} />
       </mesh>
 
       {/* Warning signs on Room 3 Entrance */}
-      <group position={[0, 2.8, -36.2]} rotation={[0, Math.PI, 0]}>
+      <group position={[0, 2.8, -36.4]} rotation={[0, Math.PI, 0]}>
         <pointLight intensity={14} distance={4} color="#ff3333" />
       </group>
 
-      {/* North Partition Wall to Room 4 with Grand Double Doorway opening */}
-      <mesh position={[-5.3, 2.9, -58]} material={materials.room3Wall}>
-        <planeGeometry args={[7.4, 5.8]} />
-      </mesh>
-      <mesh position={[5.3, 2.9, -58]} material={materials.room3Wall}>
-        <planeGeometry args={[7.4, 5.8]} />
-      </mesh>
-      <mesh position={[0, 4.85, -58]} material={materials.room3Wall}>
-        <planeGeometry args={[3.2, 1.9]} />
-      </mesh>
-
-      {/* DOOR 3 -> 4 */}
-      <InteractiveDoubleDoor
-        position={[0, 0, -58]}
+      {/* COMPLETE SOLID PARTITION WALL 3 WITH EMBEDDED DOOR (Room 3 -> Room 4 at Z = -58) */}
+      <ArchitecturalPartitionWallWithDoor
+        z={-58}
+        width={18}
+        height={5.8}
+        wallThickness={0.35}
+        doorWidth={2.8}
+        doorHeight={3.5}
+        wallColor="#1a1918"
         isOpen={doors.door3}
         roomTitle="Wishes & Celebration"
         roomNumber={4}
@@ -862,18 +941,20 @@ function LuxuryVillaStepByStepArchitecture({
         <planeGeometry args={[24, 28]} />
       </mesh>
 
-      {/* West & East Pavilion Walls */}
-      <mesh position={[-12, 3.4, -72]} rotation={[0, Math.PI / 2, 0]} material={materials.room4Wall}>
-        <planeGeometry args={[28, 6.8]} />
+      {/* SOLID West & East Pavilion Walls in Room 4 */}
+      <mesh position={[-12, 3.4, -72]} castShadow receiveShadow>
+        <boxGeometry args={[0.35, 6.8, 28]} />
+        <meshStandardMaterial color="#f8f6f0" roughness={0.35} />
       </mesh>
-      <mesh position={[12, 3.4, -72]} rotation={[0, -Math.PI / 2, 0]} material={materials.room4Wall}>
-        <planeGeometry args={[28, 6.8]} />
+      <mesh position={[12, 3.4, -72]} castShadow receiveShadow>
+        <boxGeometry args={[0.35, 6.8, 28]} />
+        <meshStandardMaterial color="#f8f6f0" roughness={0.35} />
       </mesh>
 
       {/* Massive North Glass Wall overlooking midnight fireworks garden */}
       <mesh position={[0, 3.4, -86]}>
         <planeGeometry args={[24, 6.8]} />
-        <meshPhysicalMaterial color="#cce6ff" transmission={0.92} transparent opacity={0.35} roughness={0.05} />
+        <meshPhysicalMaterial color="#cce6ff" transmission={0.92} transparent opacity={0.35} roughness={0.05} side={THREE.DoubleSide} />
       </mesh>
 
       {/* Floating Birthday Celebration Balloons */}
