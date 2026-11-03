@@ -169,8 +169,18 @@ export default function MuseumPage() {
             <span>Games 🕹️</span>
           </button>
 
+          {/* Picture Adder Person / Creator Dashboard link */}
+          <Link
+            href="/create"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/15 hover:bg-amber-500/30 border border-amber-400/40 text-amber-200 text-xs font-medium backdrop-blur-md transition-all active:scale-95 cursor-pointer shadow-md"
+            title="Open Picture Adder / Creator Dashboard"
+          >
+            <PlusCircle className="w-3.5 h-3.5 text-amber-300" />
+            <span className="hidden md:inline">Creator</span> Studio 🎨
+          </Link>
+
           {/* Background Birthday Soundtrack */}
-          <AudioController />
+          <AudioController customAudioUrl={config.settings?.customAudioUrl} />
         </div>
       </div>
 

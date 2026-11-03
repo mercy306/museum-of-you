@@ -1454,6 +1454,9 @@ export function MuseumWalkthrough3D({
       colors: ['#ffd700', '#ff69b4', '#00e5ff', '#ff851b', '#2ecc40']
     });
     playDiscoverySound();
+    try {
+      window.dispatchEvent(new CustomEvent('play-birthday-song'));
+    } catch {}
   };
 
   const handleSkipIntro = () => {
@@ -2349,11 +2352,21 @@ export function MuseumWalkthrough3D({
             </div>
           </div>
 
-          {/* Bottom Hint */}
-          <div className="w-full text-center pointer-events-none">
+          {/* Bottom Hint & Creator Studio Link */}
+          <div className="w-full text-center pointer-events-auto">
             <p className="text-xs font-mono tracking-wider text-neutral-400">
               {isTouchDevice ? 'Choose "Watch Birthday Movie" or "Walk & Explore Freely"' : 'Use WASD or Arrow Keys to walk · Click screen to look around'}
             </p>
+            <div className="mt-2.5">
+              <a
+                href="./create"
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 hover:bg-white/15 text-[11px] font-mono text-amber-300 hover:text-amber-200 border border-white/10 transition-colors"
+              >
+                <span>🎨 Picture Adder &amp; Creator Studio</span>
+                <span className="text-neutral-400">· Add photos &amp; customize →</span>
+              </a>
+            </div>
           </div>
         </div>
       )}

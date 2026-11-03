@@ -165,6 +165,7 @@ export interface MuseumConfig {
     enableSoundtrack: boolean;
     enableGuidedTour: boolean;
     ambientLightingIntensity: number;
+    customAudioUrl?: string;
   };
 }
 
