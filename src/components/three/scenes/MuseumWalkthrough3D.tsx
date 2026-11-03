@@ -156,34 +156,32 @@ export interface MovieShot {
   doorToOpen?: 1 | 2 | 3;
 }
 
-// 4-Room Physical Walkable Boundary Physics with Real Closed Door Collisions
+// 4-Room Physical Walkable Boundary Physics - Smooth, generous & impossible to get stuck
 function isValidPosition(
   x: number,
   z: number,
   doors: { door1: boolean; door2: boolean; door3: boolean }
 ): boolean {
-  // Room 1: Memorable Moments & Portico Arrival Terrace (Z: [11.5, -13.5], X: [-8.5, 8.5])
-  if (x >= -8.5 && x <= 8.5 && z >= -13.5 && z <= 11.5) return true;
+  // Outer villa boundaries
+  if (z > 12.0 || z < -86.5) return false;
+  if (z > -57.5 && Math.abs(x) > 8.8) return false;
+  if (z <= -57.5 && Math.abs(x) > 12.0) return false;
 
-  // Doorway 1 Threshold (Z = -14) connecting Room 1 & Room 2
-  if (doors.door1 && x >= -1.4 && x <= 1.4 && z >= -16.2 && z <= -13.4) return true;
+  // Closed door barriers
+  if (!doors.door1 && z <= -13.5 && z >= -16.0) return false;
+  if (!doors.door2 && z <= -35.5 && z >= -38.0) return false;
+  if (!doors.door3 && z <= -57.5 && z >= -60.0) return false;
 
-  // Room 2: Funny Memories (Z: [-14.5, -35.5], X: [-8.5, 8.5])
-  if (x >= -8.5 && x <= 8.5 && z >= -35.5 && z <= -14.5) return true;
+  // When passing through open doorway thresholds, stay within the wide corridor (-2.8 to +2.8)
+  if (
+    (z <= -13.2 && z >= -16.0) ||
+    (z <= -35.2 && z >= -38.0) ||
+    (z <= -57.2 && z >= -60.0)
+  ) {
+    return Math.abs(x) <= 2.8;
+  }
 
-  // Doorway 2 Threshold (Z = -36) connecting Room 2 & Room 3
-  if (doors.door2 && x >= -1.4 && x <= 1.4 && z >= -38.2 && z <= -35.4) return true;
-
-  // Room 3: Embarrassing Images (Z: [-36.5, -57.5], X: [-8.5, 8.5])
-  if (x >= -8.5 && x <= 8.5 && z >= -57.5 && z <= -36.5) return true;
-
-  // Doorway 3 Threshold (Z = -58) connecting Room 3 & Room 4
-  if (doors.door3 && x >= -1.6 && x <= 1.6 && z >= -60.2 && z <= -57.4) return true;
-
-  // Room 4: Wishes & Grand Celebration Hall (Z: [-58.5, -85.5], X: [-11.5, 11.5])
-  if (x >= -11.5 && x <= 11.5 && z >= -85.5 && z <= -58.5) return true;
-
-  return false;
+  return true;
 }
 
 // First-person WASD & Touch Mobile Player Controller with Smooth FOV Zoom
@@ -324,9 +322,7 @@ function PlayerController({
       euler.current.setFromQuaternion(camera.quaternion);
       onPlayerPositionChange([camera.position.x, camera.position.y, camera.position.z]);
 
-      if (t >= 1) {
-        onIntroComplete?.();
-      }
+      // Hold steady until user taps to enter
       return;
     }
 
@@ -432,11 +428,24 @@ function PlayerController({
     const candidateX = camera.position.x + moveX;
     const candidateZ = camera.position.z + moveZ;
 
-    if (isValidPosition(candidateX, camera.position.z, doors)) {
+    // Smooth collision with wall sliding
+    if (isValidPosition(candidateX, candidateZ, doors)) {
       camera.position.x = candidateX;
-    }
-    if (isValidPosition(camera.position.x, candidateZ, doors)) {
       camera.position.z = candidateZ;
+    } else {
+      if (isValidPosition(candidateX, camera.position.z, doors)) {
+        camera.position.x = candidateX;
+      }
+      if (isValidPosition(camera.position.x, candidateZ, doors)) {
+        camera.position.z = candidateZ;
+      }
+    }
+
+    // Unstick safety net: if player is ever outside bounds, smoothly pull them toward room center
+    if (!isValidPosition(camera.position.x, camera.position.z, doors)) {
+      camera.position.x = THREE.MathUtils.damp(camera.position.x, 0, 8, delta);
+      if (camera.position.z > 10.5) camera.position.z = 10.5;
+      if (camera.position.z < -84.0) camera.position.z = -84.0;
     }
 
     camera.position.y = 1.65;
@@ -455,10 +464,20 @@ function PlayerController({
     }
     onNearExhibitChange(closestExhibit);
 
-    // Check proximity to Doors
+    // Check proximity to Doors & Auto-open on approach so players never get stuck
     const distToDoor1 = camera.position.distanceTo(new THREE.Vector3(0, 1.65, -14));
     const distToDoor2 = camera.position.distanceTo(new THREE.Vector3(0, 1.65, -36));
     const distToDoor3 = camera.position.distanceTo(new THREE.Vector3(0, 1.65, -58));
+
+    if (distToDoor1 < 3.8 && !doors.door1) {
+      onAutoOpenDoor?.(1);
+    }
+    if (distToDoor2 < 3.8 && !doors.door2) {
+      onAutoOpenDoor?.(2);
+    }
+    if (distToDoor3 < 3.8 && !doors.door3) {
+      onAutoOpenDoor?.(3);
+    }
 
     if (distToDoor1 < 2.8) {
       onNearDoorChange({ id: 1, title: 'Room 2 · Funny Memories', isOpen: doors.door1 });
@@ -1448,6 +1467,8 @@ export function MuseumWalkthrough3D({
 
   const handleOpenBirthdayMuseum = () => {
     setIsIntroPlaying(false);
+    setTeleportTarget([0, 1.65, 2.0]);
+    setTimeout(() => setTeleportTarget(null), 300);
     confetti({
       particleCount: 110,
       spread: 75,
