@@ -22,7 +22,9 @@ import {
   ZoomOut,
   RotateCcw,
   Gamepad2,
-  Gift
+  Gift,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 // Suppress Three.js r187 deprecation notices triggered by R3F internal bindings
@@ -1339,8 +1341,19 @@ export function MuseumWalkthrough3D({
   // Cinematic Arrival Intro State (plays smooth camera glide from Portico to Room 1)
   const [isIntroPlaying, setIsIntroPlaying] = useState(true);
 
-  const handleSkipIntro = () => {
+  const handleOpenBirthdayMuseum = () => {
     setIsIntroPlaying(false);
+    confetti({
+      particleCount: 110,
+      spread: 75,
+      origin: { y: 0.6 },
+      colors: ['#ffd700', '#ff69b4', '#00e5ff', '#ff851b', '#2ecc40']
+    });
+    playDiscoverySound();
+  };
+
+  const handleSkipIntro = () => {
+    handleOpenBirthdayMuseum();
   };
 
   // Mobile Camera Zoom In / Out State (FOV: 25 max zoom in, 64 default, 85 wide zoom out)
@@ -1707,30 +1720,48 @@ export function MuseumWalkthrough3D({
         ))}
       </Canvas>
 
-      {/* ===================== STEP-BY-STEP ROOM PROGRESSION BAR ===================== */}
-      <div className="absolute top-16 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-full bg-black/60 border border-[#c5a059]/40 backdrop-blur-md shadow-2xl max-w-[95vw] overflow-x-auto">
+      {/* ===================== SIMPLE & DELIGHTFUL ROOM NAVIGATOR ===================== */}
+      <div className="absolute top-16 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1 sm:gap-2 px-3 py-1.5 rounded-full bg-black/70 border border-[#d4af37]/50 backdrop-blur-md shadow-2xl max-w-[95vw] overflow-x-auto no-scrollbar pointer-events-auto">
+        <button
+          onClick={() => handleJumpToRoom(Math.max(1, currentRoomIndex - 1))}
+          disabled={currentRoomIndex === 1}
+          className="p-1.5 rounded-full hover:bg-white/10 text-white disabled:opacity-25 disabled:pointer-events-none transition-all cursor-pointer"
+          title="Previous Room"
+        >
+          <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+        </button>
+
         {[
-          { num: 1, label: 'Memorable Moments', short: '1. Memories' },
-          { num: 2, label: 'Funny Memories', short: '2. Funny' },
-          { num: 3, label: 'Embarrassing Images', short: '3. Fails' },
-          { num: 4, label: 'Wishes & Celebration 🎂', short: '4. Party 🎂' }
+          { num: 1, label: '📸 Memories', short: '📸 Room 1' },
+          { num: 2, label: '😂 Funny', short: '😂 Room 2' },
+          { num: 3, label: '🙈 Fails', short: '🙈 Room 3' },
+          { num: 4, label: '🎂 Cake & Party!', short: '🎂 Cake!' }
         ].map((rm) => {
           const isActive = currentRoomIndex === rm.num;
           return (
             <button
               key={rm.num}
               onClick={() => handleJumpToRoom(rm.num)}
-              className={`flex items-center gap-1 px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium tracking-wide transition-all whitespace-nowrap cursor-pointer ${
                 isActive
-                  ? 'bg-gradient-to-r from-amber-500 to-[#c5a059] text-black font-bold shadow-md shadow-amber-500/30'
-                  : 'text-stone-300 hover:text-white hover:bg-white/10'
+                  ? 'bg-gradient-to-r from-amber-400 to-[#d4af37] text-neutral-950 font-bold shadow-md shadow-amber-500/30 scale-105'
+                  : 'text-neutral-300 hover:text-white hover:bg-white/10'
               }`}
             >
-              <span className="hidden md:inline">{rm.label}</span>
-              <span className="inline md:hidden">{rm.short}</span>
+              <span className="hidden sm:inline">{rm.label}</span>
+              <span className="inline sm:hidden">{rm.short}</span>
             </button>
           );
         })}
+
+        <button
+          onClick={() => handleJumpToRoom(Math.min(4, currentRoomIndex + 1))}
+          disabled={currentRoomIndex === 4}
+          className="p-1.5 rounded-full hover:bg-white/10 text-white disabled:opacity-25 disabled:pointer-events-none transition-all cursor-pointer"
+          title="Next Room"
+        >
+          <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+        </button>
       </div>
 
       {/* ===================== MOBILE & DESKTOP ZOOM IN / ZOOM OUT CONTROLS ===================== */}
@@ -1905,45 +1936,58 @@ export function MuseumWalkthrough3D({
         </div>
       )}
 
-      {/* ===================== CINEMATIC ADVENTURE ARRIVAL SEQUENCE ===================== */}
+      {/* ===================== HEARTWARMING BIRTHDAY GIFT WELCOME CARD ===================== */}
       {isIntroPlaying && (
         <div
-          onClick={handleSkipIntro}
-          className="absolute inset-0 z-50 flex flex-col justify-between p-6 sm:p-10 bg-gradient-to-b from-black/80 via-black/30 to-black/85 backdrop-blur-[2px] transition-opacity duration-1000 select-none cursor-pointer"
+          onClick={handleOpenBirthdayMuseum}
+          className="absolute inset-0 z-50 flex flex-col justify-between p-6 sm:p-10 bg-gradient-to-b from-black/85 via-black/60 to-black/90 backdrop-blur-md select-none cursor-pointer"
         >
-          {/* Top Letterbox Bar */}
+          {/* Top subtle badge */}
           <div className="w-full flex items-center justify-between pointer-events-auto">
-            <span className="text-[10px] sm:text-xs font-mono uppercase tracking-[0.25em] text-[#d4af37]">
-              ARCHITECTURAL EXHIBITION · IMMERSIVE EXPERIENCE
+            <span className="text-xs sm:text-sm font-serif tracking-wider text-amber-300 font-bold flex items-center gap-2">
+              <span>🎁</span> A Special Birthday Gift Just For You
             </span>
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                handleSkipIntro();
+                handleOpenBirthdayMuseum();
               }}
               className="px-4 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-mono text-xs uppercase tracking-wider backdrop-blur-md transition-all active:scale-95 border border-white/20 cursor-pointer"
             >
-              Skip Intro [Space]
+              Skip Intro →
             </button>
           </div>
 
-          {/* Center Cinematic Title Card */}
+          {/* Center Celebratory Title Card */}
           <div className="text-center max-w-xl mx-auto my-auto pointer-events-none">
-            <p className="text-xs sm:text-sm font-mono uppercase tracking-[0.35em] text-[#d4af37] mb-2 font-bold animate-pulse">
-              PRESENTING
-            </p>
-            <h1 className="text-3xl sm:text-6xl font-serif font-black text-white tracking-wide drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)]">
-              THE MUSEUM OF YOU
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs sm:text-sm font-bold uppercase tracking-widest mb-4 animate-bounce">
+              <span>🎂</span> HAPPY BIRTHDAY! <span>🎉</span>
+            </div>
+            <h1 className="text-4xl sm:text-6xl font-serif font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-[#ffd700] to-amber-400 tracking-wide drop-shadow-2xl">
+              {config.profile.name}
             </h1>
-            <p className="text-xs sm:text-base font-serif italic text-neutral-300 mt-3 drop-shadow">
-              Chapter 1 · The Foundations &amp; Memorable Moments
+            <p className="text-sm sm:text-base font-serif text-neutral-200 mt-4 leading-relaxed drop-shadow max-w-md mx-auto">
+              Welcome to your personal 3D Birthday Museum! Walk through the rooms, see your unforgettable memories, laugh at funny moments, and make a birthday wish.
             </p>
+
+            <div className="mt-8 pointer-events-auto">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleOpenBirthdayMuseum();
+                }}
+                className="px-8 py-4 rounded-full bg-gradient-to-r from-amber-500 via-[#ffd700] to-amber-500 text-neutral-950 font-display font-black text-sm sm:text-base uppercase tracking-wider shadow-2xl shadow-amber-500/40 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center gap-2.5 mx-auto border-2 border-white"
+              >
+                <span>✨ Open My Birthday Museum</span>
+                <span>→</span>
+              </button>
+            </div>
           </div>
 
-          {/* Bottom Letterbox Hint */}
+          {/* Bottom Hint */}
           <div className="w-full text-center pointer-events-none">
-            <p className="text-[11px] font-mono tracking-widest text-[#d4af37]/80 uppercase animate-pulse">
-              Entering the Grand Portico · Tap anywhere or press Space to take control
+            <p className="text-xs font-mono tracking-wider text-neutral-400">
+              {isTouchDevice ? 'Tap "Open My Birthday Museum" to explore' : 'Use WASD or Arrow Keys to walk · Click screen to look around'}
             </p>
           </div>
         </div>
