@@ -1,8 +1,8 @@
-:HL["/museum-of-you/_next/static/chunks/36e-1be0tz0j-.css","style"]
+:HL["/museum-of-you/_next/static/chunks/1j4350p5u51lx.css","style"]
 :HL["/museum-of-you/_next/static/media/01d6212a423b17a1-s.p.1pvupmngxrt5z.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
 :HL["/museum-of-you/_next/static/media/4bd950c905cec094-s.p.2cu9iw-l3ih8o.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
 :HL["/museum-of-you/_next/static/media/6f3ab718e3727c1a-s.p.3huc2loe0ie8a.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
 :HL["/museum-of-you/_next/static/media/d8aeca813a9ab546-s.p.18rizl4rsrl42.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
 2:[["children",{"s":"__PAGE__","h":160}]]
 1:[["children",{"s":"create","h":96,"c":"$Q2"}]]
-0:{"b":"LdR1dMWFKz8jDRE6vb4Hi","t":{"t":{"s":"","h":80,"c":"$Q1"}}}
+0:{"b":"W3be4r9YfdMsb4iyzrfln","t":{"t":{"s":"","h":80,"c":"$Q1"}}}
