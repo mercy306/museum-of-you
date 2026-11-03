@@ -12,7 +12,7 @@ import { ScavengerHuntHUD } from '@/components/arcade/ScavengerHuntHUD';
 import { MuseumConfig, Exhibit, MysteryBoxItem, HiddenMemoryItem } from '@/types/museum';
 import { getMuseumConfig, saveMuseumConfig } from '@/lib/museumStore';
 import Link from 'next/link';
-import { Landmark, Mail, PlusCircle, Compass, Gamepad2, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Landmark, Mail, PlusCircle, Compass, Gamepad2, Sparkles, CheckCircle2, Film } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 // Dynamically import 3D Museum Walkthrough
@@ -135,6 +135,19 @@ export default function MuseumPage() {
 
         {/* Right: Clean, essential actions without visual clutter */}
         <div className="flex items-center gap-2 pointer-events-auto">
+          {/* Watch Birthday Movie / Story Reel */}
+          <button
+            onClick={() => setIsTouring(!isTouring)}
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border text-xs font-bold backdrop-blur-md transition-all active:scale-95 cursor-pointer shadow-md ${
+              isTouring
+                ? 'bg-amber-500 text-neutral-950 border-white shadow-amber-500/50 animate-pulse'
+                : 'bg-amber-500/20 hover:bg-amber-500/35 border-amber-400/50 text-amber-200'
+            }`}
+          >
+            <Film className="w-3.5 h-3.5" />
+            <span>{isTouring ? 'Exit Movie 🎬' : 'Watch Movie 🎬'}</span>
+          </button>
+
           {/* Birthday Wishes & Cards */}
           <button
             onClick={() => setShowWishesModal(true)}

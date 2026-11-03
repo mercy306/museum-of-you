@@ -9,6 +9,12 @@ import { MuseumConfig, Exhibit, ArcadeManifest, MysteryBoxItem, HiddenMemoryItem
 import { ArcadeCabinet3D, MysteryGiftBox3D, HiddenMemoryToken3D } from './Arcade3DElements';
 import { CinematicRoom1Environment } from '../cinematic/CinematicRoom1Environment';
 import {
+  TwinklingFairyLights,
+  FestiveBalloonsCluster,
+  MagicalCelebrationDust,
+  CakeSparklerFountain
+} from '../cinematic/BirthdayFestiveDecorations';
+import {
   Sparkles,
   Music,
   Video,
@@ -24,7 +30,12 @@ import {
   Gamepad2,
   Gift,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Play,
+  Pause,
+  SkipBack,
+  SkipForward,
+  Film
 } from 'lucide-react';
 
 // Suppress Three.js r187 deprecation notices triggered by R3F internal bindings
@@ -129,6 +140,21 @@ function playDiscoverySound() {
   } catch {}
 }
 
+export interface MovieShot {
+  id: string;
+  type: 'intro' | 'exhibit' | 'door_transit' | 'cake_finale';
+  cameraPos: [number, number, number];
+  lookAt: [number, number, number];
+  duration: number;
+  roomNumber: number;
+  roomTitle: string;
+  badge: string;
+  title: string;
+  description?: string;
+  date?: string;
+  doorToOpen?: 1 | 2 | 3;
+}
+
 // 4-Room Physical Walkable Boundary Physics with Real Closed Door Collisions
 function isValidPosition(
   x: number,
@@ -174,6 +200,11 @@ function PlayerController({
   arcade,
   collectedMemoryIds = [],
   isTouring,
+  movieShots = [],
+  activeShotIndex = 0,
+  isMoviePaused = false,
+  onAdvanceMovieShot,
+  onAutoOpenDoor,
   isIntroPlaying = false,
   onIntroComplete,
   teleportTarget,
@@ -194,6 +225,11 @@ function PlayerController({
   arcade?: ArcadeManifest;
   collectedMemoryIds?: string[];
   isTouring: boolean;
+  movieShots?: MovieShot[];
+  activeShotIndex?: number;
+  isMoviePaused?: boolean;
+  onAdvanceMovieShot?: (nextIndex: number) => void;
+  onAutoOpenDoor?: (doorId: 1 | 2 | 3) => void;
   isIntroPlaying?: boolean;
   onIntroComplete?: () => void;
   teleportTarget: [number, number, number] | null;
@@ -207,6 +243,13 @@ function PlayerController({
   const tourProgress = useRef(0);
   const introProgress = useRef(0);
   const euler = useRef(new THREE.Euler(0, 0, 0, 'YXZ'));
+  const movieTimer = useRef(0);
+  const currentLookAt = useRef(new THREE.Vector3(0, 1.65, -6));
+  const confettiFired = useRef(false);
+
+  useEffect(() => {
+    movieTimer.current = 0;
+  }, [activeShotIndex]);
 
   const tourWaypoints = useMemo(() => {
     return [
@@ -301,18 +344,55 @@ function PlayerController({
       touchLookDelta.current = { x: 0, y: 0 };
     }
 
-    if (isTouring) {
-      tourProgress.current += delta * 0.07;
-      const numPoints = tourWaypoints.length - 1;
-      const t = tourProgress.current % numPoints;
-      const idx = Math.floor(t);
-      const nextIdx = (idx + 1) % tourWaypoints.length;
-      const alpha = t - idx;
+    if (isTouring && movieShots && movieShots.length > 0) {
+      const currentShot = movieShots[activeShotIndex || 0] || movieShots[0];
 
-      const p1 = tourWaypoints[idx];
-      const p2 = tourWaypoints[nextIdx];
-      camera.position.lerpVectors(p1, p2, alpha);
-      camera.lookAt(p2.x, 1.65, p2.z);
+      // Auto open doors along path
+      if (currentShot.doorToOpen && onAutoOpenDoor) {
+        onAutoOpenDoor(currentShot.doorToOpen);
+      }
+
+      // Fire confetti when reaching cake finale
+      if (currentShot.type === 'cake_finale' && !confettiFired.current) {
+        confettiFired.current = true;
+        try {
+          confetti({
+            particleCount: 90,
+            spread: 80,
+            origin: { y: 0.55 },
+            colors: ['#ffd700', '#ff69b4', '#00e5ff', '#ff851b', '#2ecc40']
+          });
+        } catch {}
+      }
+
+      // Progress movie shot timer if not paused
+      if (!isMoviePaused && onAdvanceMovieShot) {
+        movieTimer.current += delta;
+        if (movieTimer.current >= currentShot.duration) {
+          movieTimer.current = 0;
+          const nextIdx = ((activeShotIndex || 0) + 1) % movieShots.length;
+          if (nextIdx === 0) confettiFired.current = false;
+          onAdvanceMovieShot(nextIdx);
+        }
+      }
+
+      const targetPos = new THREE.Vector3(...currentShot.cameraPos);
+      const targetLook = new THREE.Vector3(...currentShot.lookAt);
+
+      // In cake finale, slowly orbit around cake
+      if (currentShot.type === 'cake_finale') {
+        const tOrbit = movieTimer.current * 0.22;
+        const radius = 5.2;
+        targetPos.x = Math.sin(tOrbit) * radius;
+        targetPos.z = -72 + Math.cos(tOrbit) * radius;
+        targetPos.y = 1.95 + Math.sin(tOrbit * 2) * 0.12;
+      }
+
+      camera.position.lerp(targetPos, Math.min(1, delta * 2.6));
+      currentLookAt.current.lerp(targetLook, Math.min(1, delta * 3.2));
+      camera.lookAt(currentLookAt.current);
+      euler.current.setFromQuaternion(camera.quaternion);
+
       onPlayerPositionChange([camera.position.x, camera.position.y, camera.position.z]);
       return;
     }
@@ -949,6 +1029,25 @@ function LuxuryVillaStepByStepArchitecture({
       ))}
 
       {/* ===================== ROOM 1: MEMORABLE MOMENTS (Z: 4 to -14) ===================== */}
+      {/* ===================== FESTIVE BIRTHDAY DECORATIONS ===================== */}
+      {/* Ceiling Twinkling Fairy Lights across all 4 rooms */}
+      <TwinklingFairyLights startPos={[-8, 5.4, 2]} endPos={[8, 5.4, -13]} count={26} />
+      <TwinklingFairyLights startPos={[-8, 5.4, -15]} endPos={[8, 5.4, -35]} count={26} />
+      <TwinklingFairyLights startPos={[-8, 5.4, -37]} endPos={[8, 5.4, -57]} count={26} />
+      <TwinklingFairyLights startPos={[-10, 6.2, -59]} endPos={[10, 6.2, -85]} count={30} />
+      <TwinklingFairyLights startPos={[10, 6.2, -59]} endPos={[-10, 6.2, -85]} count={30} />
+
+      {/* Floating Helium Balloon Clusters in Room Corners */}
+      <FestiveBalloonsCluster position={[-7.5, 0, 1.5]} />
+      <FestiveBalloonsCluster position={[7.5, 0, -11]} />
+      <FestiveBalloonsCluster position={[7.5, 0, -22]} />
+      <FestiveBalloonsCluster position={[-7.5, 0, -44]} />
+      <FestiveBalloonsCluster position={[-3.8, 0, -72]} />
+      <FestiveBalloonsCluster position={[3.8, 0, -72]} />
+
+      {/* Magical Floating Golden Stardust Atmosphere */}
+      <MagicalCelebrationDust count={120} />
+
       <mesh position={[0, 0, -5]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow material={materials.warmOakFloor}>
         <planeGeometry args={[18, 18]} />
       </mesh>
@@ -1200,6 +1299,11 @@ function LuxuryVillaStepByStepArchitecture({
 
         {!candlesBlown && (
           <pointLight position={[0, 2.8, 0]} intensity={45} distance={12} color="#ffe2aa" />
+        )}
+
+        {/* Live Golden Sparkler Fountain atop the Cake */}
+        {!candlesBlown && (
+          <CakeSparklerFountain position={[0, 2.38, 0]} />
         )}
 
         <Float speed={1.2} rotationIntensity={0.5} floatIntensity={0.8}>
@@ -1502,6 +1606,154 @@ export function MuseumWalkthrough3D({
     return list;
   }, [config.galleries]);
 
+  const [activeShotIndex, setActiveShotIndex] = useState(0);
+  const [isMoviePaused, setIsMoviePaused] = useState(false);
+
+  // Cinematic Birthday Story Reel Director Choreography
+  const movieShots = useMemo<MovieShot[]>(() => {
+    const shots: MovieShot[] = [];
+
+    // Shot 0: Welcome Arrival
+    shots.push({
+      id: 'shot-welcome',
+      type: 'intro',
+      cameraPos: [0, 1.85, 3.2],
+      lookAt: [0, 1.8, -4],
+      duration: 4.5,
+      roomNumber: 1,
+      roomTitle: 'Entrance Portico',
+      badge: '✨ WELCOME TO YOUR STORY',
+      title: `${config.profile.name}'s Birthday Retrospective`,
+      description: 'Step into a world crafted entirely in your honor. Enjoy the trip down memory lane!'
+    });
+
+    // Room 1 Exhibits (Memorable Moments)
+    const room1Exhibits = exhibitsWithPositions.filter((e) => e.position[2] > -14);
+    room1Exhibits.forEach((item) => {
+      const isLeft = item.position[0] < 0;
+      shots.push({
+        id: `shot-exhibit-${item.exhibit.id}`,
+        type: 'exhibit',
+        cameraPos: [isLeft ? -5.2 : 5.2, 2.1, item.position[2]],
+        lookAt: [item.position[0], 2.1, item.position[2]],
+        duration: 5.5,
+        roomNumber: 1,
+        roomTitle: 'Room 1 · Memorable Moments',
+        badge: '📸 CHERISHED MEMORY',
+        title: item.exhibit.title,
+        date: item.exhibit.date,
+        description: item.exhibit.story || item.exhibit.curatorNote
+      });
+    });
+
+    // Door 1 Transit
+    shots.push({
+      id: 'shot-door-1',
+      type: 'door_transit',
+      cameraPos: [0, 1.75, -16.5],
+      lookAt: [0, 1.75, -24],
+      duration: 3.5,
+      roomNumber: 2,
+      roomTitle: 'Room 2 · Funny Memories',
+      badge: '🚪 UNLOCKING NEXT CHAPTER',
+      title: 'Entering Room 2: Funny Memories',
+      description: 'Get ready for pure comedy! The following vault houses the silliest and most legendary moments.',
+      doorToOpen: 1
+    });
+
+    // Room 2 Exhibits (Funny Memories)
+    const room2Exhibits = exhibitsWithPositions.filter((e) => e.position[2] <= -14 && e.position[2] > -36);
+    room2Exhibits.forEach((item) => {
+      const isLeft = item.position[0] < 0;
+      shots.push({
+        id: `shot-exhibit-${item.exhibit.id}`,
+        type: 'exhibit',
+        cameraPos: [isLeft ? -5.2 : 5.2, 2.1, item.position[2]],
+        lookAt: [item.position[0], 2.1, item.position[2]],
+        duration: 5.5,
+        roomNumber: 2,
+        roomTitle: 'Room 2 · Funny Memories',
+        badge: '😂 COMEDY GOLD',
+        title: item.exhibit.title,
+        date: item.exhibit.date,
+        description: item.exhibit.story || item.exhibit.curatorNote
+      });
+    });
+
+    // Door 2 Transit
+    shots.push({
+      id: 'shot-door-2',
+      type: 'door_transit',
+      cameraPos: [0, 1.75, -38.5],
+      lookAt: [0, 1.75, -46],
+      duration: 3.5,
+      roomNumber: 3,
+      roomTitle: 'Room 3 · Embarrassing Images',
+      badge: '🙈 VAULT OF EMBARRASSMENT',
+      title: 'Entering Room 3: Embarrassing Moments & Fails',
+      description: 'The classified funny fails and nostalgic goof-ups you can never live down!',
+      doorToOpen: 2
+    });
+
+    // Room 3 Exhibits (Embarrassing Moments)
+    const room3Exhibits = exhibitsWithPositions.filter((e) => e.position[2] <= -36 && e.position[2] > -58);
+    room3Exhibits.forEach((item) => {
+      const isLeft = item.position[0] < 0;
+      shots.push({
+        id: `shot-exhibit-${item.exhibit.id}`,
+        type: 'exhibit',
+        cameraPos: [isLeft ? -5.2 : 5.2, 2.1, item.position[2]],
+        lookAt: [item.position[0], 2.1, item.position[2]],
+        duration: 5.5,
+        roomNumber: 3,
+        roomTitle: 'Room 3 · Embarrassing Images',
+        badge: '🙈 NO REGRETS',
+        title: item.exhibit.title,
+        date: item.exhibit.date,
+        description: item.exhibit.story || item.exhibit.curatorNote
+      });
+    });
+
+    // Door 3 Transit
+    shots.push({
+      id: 'shot-door-3',
+      type: 'door_transit',
+      cameraPos: [0, 1.75, -61.0],
+      lookAt: [0, 1.75, -72],
+      duration: 4.0,
+      roomNumber: 4,
+      roomTitle: 'Room 4 · Grand Celebration Hall',
+      badge: '🎂 THE BIRTHDAY FINALE',
+      title: 'Entering Grand Celebration Hall!',
+      description: 'Music, champagne, floating balloons, and a 3-tier birthday cake celebrate you today!',
+      doorToOpen: 3
+    });
+
+    // Room 4 Cake Finale
+    shots.push({
+      id: 'shot-cake-finale',
+      type: 'cake_finale',
+      cameraPos: [0, 1.9, -67.5],
+      lookAt: [0, 1.5, -72],
+      duration: 16.0,
+      roomNumber: 4,
+      roomTitle: 'Room 4 · Grand Celebration Hall',
+      badge: '🎉 HAPPY BIRTHDAY!',
+      title: `Happy Birthday, ${config.profile.name}! 🎂`,
+      description: 'May all your dreams and wishes come true this year! Make a wish and blow out the candles!'
+    });
+
+    return shots;
+  }, [config.profile.name, exhibitsWithPositions]);
+
+  const handleNextShot = () => {
+    setActiveShotIndex((prev) => (prev + 1) % movieShots.length);
+  };
+  const handlePrevShot = () => {
+    setActiveShotIndex((prev) => (prev - 1 + movieShots.length) % movieShots.length);
+  };
+  const currentMovieShot = movieShots[activeShotIndex] || movieShots[0];
+
   const handlePlayerPositionChange = (pos: [number, number, number]) => {
     const z = pos[2];
     let room = 1;
@@ -1659,6 +1911,20 @@ export function MuseumWalkthrough3D({
           arcade={arcade}
           collectedMemoryIds={collectedMemoryIds}
           isTouring={isTouring}
+          movieShots={movieShots}
+          activeShotIndex={activeShotIndex}
+          isMoviePaused={isMoviePaused}
+          onAdvanceMovieShot={setActiveShotIndex}
+          onAutoOpenDoor={(doorId) => {
+            setDoors((d) => {
+              const key = `door${doorId}` as keyof typeof d;
+              if (!d[key]) {
+                playDoorSound(true);
+                return { ...d, [key]: true };
+              }
+              return d;
+            });
+          }}
           isIntroPlaying={isIntroPlaying}
           onIntroComplete={() => setIsIntroPlaying(false)}
           teleportTarget={teleportTarget}
@@ -1832,7 +2098,7 @@ export function MuseumWalkthrough3D({
       )}
 
       {/* NEAR DOOR INTERACTION PROMPT */}
-      {nearDoor && (
+      {nearDoor && !isTouring && (
         <div className="absolute bottom-20 sm:bottom-16 left-1/2 -translate-x-1/2 z-40 pointer-events-auto max-w-[90vw]">
           <button
             onClick={() => handleToggleDoor(nearDoor.id)}
@@ -1850,7 +2116,7 @@ export function MuseumWalkthrough3D({
       )}
 
       {/* NEAR HIDDEN MEMORY INTERACTION PROMPT */}
-      {nearHiddenMemory && !nearDoor && (
+      {nearHiddenMemory && !nearDoor && !isTouring && (
         <div className="absolute bottom-20 sm:bottom-16 left-1/2 -translate-x-1/2 z-40 pointer-events-auto max-w-[90vw]">
           <button
             onClick={() => onCollectHiddenMemory?.(nearHiddenMemory)}
@@ -1868,7 +2134,7 @@ export function MuseumWalkthrough3D({
       )}
 
       {/* NEAR MYSTERY BOX INTERACTION PROMPT */}
-      {nearMysteryBox && !nearDoor && !nearHiddenMemory && (
+      {nearMysteryBox && !nearDoor && !nearHiddenMemory && !isTouring && (
         <div className="absolute bottom-20 sm:bottom-16 left-1/2 -translate-x-1/2 z-40 pointer-events-auto max-w-[90vw]">
           <button
             onClick={() => onOpenMysteryBox?.(nearMysteryBox)}
@@ -1889,7 +2155,7 @@ export function MuseumWalkthrough3D({
       )}
 
       {/* NEAR ARCADE STATION INTERACTION PROMPT */}
-      {isNearArcade && !nearDoor && !nearHiddenMemory && !nearMysteryBox && (
+      {isNearArcade && !nearDoor && !nearHiddenMemory && !nearMysteryBox && !isTouring && (
         <div className="absolute bottom-20 sm:bottom-16 left-1/2 -translate-x-1/2 z-40 pointer-events-auto max-w-[90vw]">
           <button
             onClick={() => onOpenArcade?.()}
@@ -1907,7 +2173,7 @@ export function MuseumWalkthrough3D({
       )}
 
       {/* Near Cake Celebration Interaction Prompt */}
-      {isNearCake && !nearDoor && !candlesBlown && (
+      {isNearCake && !nearDoor && !candlesBlown && !isTouring && (
         <div className="absolute bottom-20 sm:bottom-16 left-1/2 -translate-x-1/2 z-40 pointer-events-auto max-w-[90vw]">
           <button
             onClick={handleCelebrateAndBlowCandles}
@@ -1922,7 +2188,7 @@ export function MuseumWalkthrough3D({
       )}
 
       {/* Near Friend Wishes Desk Interaction Prompt */}
-      {isNearWishes && !nearDoor && !isNearCake && !nearbyExhibit && (
+      {isNearWishes && !nearDoor && !isNearCake && !nearbyExhibit && !isTouring && (
         <div className="absolute bottom-20 sm:bottom-16 left-1/2 -translate-x-1/2 z-40 pointer-events-auto max-w-[90vw]">
           <button
             onClick={() => onOpenWishes?.()}
@@ -1933,6 +2199,92 @@ export function MuseumWalkthrough3D({
             </span>
             <span>Open Friend Wishes &amp; Guestbook 💌</span>
           </button>
+        </div>
+      )}
+
+      {/* ===================== CINEMATIC BIRTHDAY STORY REEL OVERLAY ===================== */}
+      {isTouring && currentMovieShot && (
+        <div className="absolute inset-0 pointer-events-none z-40 flex flex-col justify-between p-4 sm:p-6">
+          {/* Top Center: Recording / Playing Badge */}
+          <div className="w-full flex items-center justify-center pointer-events-auto pt-14 sm:pt-4">
+            <div className="flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-neutral-950/85 border border-amber-500/50 backdrop-blur-md shadow-2xl text-[11px] sm:text-xs font-mono text-amber-200">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
+              <span className="font-bold tracking-wider">BIRTHDAY STORY REEL 🎬</span>
+              <span className="text-white/30">|</span>
+              <span>{activeShotIndex + 1} / {movieShots.length}</span>
+            </div>
+          </div>
+
+          {/* Bottom Center: Cinematic Memory Subtitle Card */}
+          <div className="w-full max-w-xl mx-auto pointer-events-auto pb-4 sm:pb-2">
+            <div className="p-4 sm:p-5 rounded-2xl bg-neutral-950/92 border border-amber-500/60 shadow-[0_16px_50px_rgba(0,0,0,0.85)] backdrop-blur-xl transition-all">
+              {/* Badge & Date */}
+              <div className="flex items-center justify-between text-xs mb-1.5">
+                <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30 text-[11px] tracking-wide">
+                  {currentMovieShot.badge}
+                </span>
+                {currentMovieShot.date && (
+                  <span className="text-neutral-400 font-mono text-xs">📅 {currentMovieShot.date}</span>
+                )}
+              </div>
+
+              {/* Title */}
+              <h3 className="text-base sm:text-lg font-serif font-black text-white tracking-wide">
+                {currentMovieShot.title}
+              </h3>
+
+              {/* Caption */}
+              {currentMovieShot.description && (
+                <p className="text-xs sm:text-sm text-neutral-300 font-sans mt-1 line-clamp-2 leading-relaxed">
+                  {currentMovieShot.description}
+                </p>
+              )}
+
+              {/* Controls bar */}
+              <div className="mt-3.5 pt-3 border-t border-white/10 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={handlePrevShot}
+                    className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all active:scale-95 cursor-pointer"
+                    title="Previous memory"
+                  >
+                    <SkipBack className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setIsMoviePaused(!isMoviePaused)}
+                    className="px-3.5 py-1.5 rounded-full bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-xs flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-md"
+                  >
+                    {isMoviePaused ? <Play className="w-3.5 h-3.5 fill-current" /> : <Pause className="w-3.5 h-3.5 fill-current" />}
+                    <span>{isMoviePaused ? 'Play' : 'Pause'}</span>
+                  </button>
+                  <button
+                    onClick={handleNextShot}
+                    className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all active:scale-95 cursor-pointer"
+                    title="Next memory"
+                  >
+                    <SkipForward className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {currentMovieShot.type === 'cake_finale' && !candlesBlown && (
+                  <button
+                    onClick={handleCelebrateAndBlowCandles}
+                    className="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-pink-500 to-amber-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer animate-pulse border border-white"
+                  >
+                    <span>🎂 Blow Out Candles 💨</span>
+                  </button>
+                )}
+
+                <button
+                  onClick={onToggleTour}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/25 border border-white/20 text-xs font-medium text-white transition-all active:scale-95 cursor-pointer"
+                >
+                  <Move className="w-3.5 h-3.5" />
+                  <span>Free Walk</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -1970,16 +2322,29 @@ export function MuseumWalkthrough3D({
               Welcome to your personal 3D Birthday Museum! Walk through the rooms, see your unforgettable memories, laugh at funny moments, and make a birthday wish.
             </p>
 
-            <div className="mt-8 pointer-events-auto">
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5 pointer-events-auto">
+              {/* Primary: Watch Birthday Movie */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   handleOpenBirthdayMuseum();
+                  if (!isTouring) onToggleTour();
                 }}
-                className="px-8 py-4 rounded-full bg-gradient-to-r from-amber-500 via-[#ffd700] to-amber-500 text-neutral-950 font-display font-black text-sm sm:text-base uppercase tracking-wider shadow-2xl shadow-amber-500/40 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center gap-2.5 mx-auto border-2 border-white"
+                className="w-full sm:w-auto px-7 py-3.5 rounded-full bg-gradient-to-r from-amber-500 via-[#ffd700] to-amber-500 text-neutral-950 font-display font-black text-sm uppercase tracking-wider shadow-2xl shadow-amber-500/40 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2 border-2 border-white"
               >
-                <span>✨ Open My Birthday Museum</span>
-                <span>→</span>
+                <span>🎬 Watch Birthday Movie 🍿</span>
+              </button>
+
+              {/* Secondary: Explore Freely */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleOpenBirthdayMuseum();
+                  if (isTouring) onToggleTour();
+                }}
+                className="w-full sm:w-auto px-6 py-3.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-display font-bold text-sm tracking-wide backdrop-blur-md transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2 border border-white/25"
+              >
+                <span>🕹️ Walk &amp; Explore Freely</span>
               </button>
             </div>
           </div>
@@ -1987,14 +2352,14 @@ export function MuseumWalkthrough3D({
           {/* Bottom Hint */}
           <div className="w-full text-center pointer-events-none">
             <p className="text-xs font-mono tracking-wider text-neutral-400">
-              {isTouchDevice ? 'Tap "Open My Birthday Museum" to explore' : 'Use WASD or Arrow Keys to walk · Click screen to look around'}
+              {isTouchDevice ? 'Choose "Watch Birthday Movie" or "Walk & Explore Freely"' : 'Use WASD or Arrow Keys to walk · Click screen to look around'}
             </p>
           </div>
         </div>
       )}
 
       {/* Prompt [E] Inspect Artwork (Photo or Video) */}
-      {nearbyExhibit && !nearDoor && !isNearCake && !isNearWishes && !nearHiddenMemory && !nearMysteryBox && !isNearArcade && !isIntroPlaying && (
+      {nearbyExhibit && !nearDoor && !isNearCake && !isNearWishes && !nearHiddenMemory && !nearMysteryBox && !isNearArcade && !isIntroPlaying && !isTouring && (
         <div className="absolute bottom-20 sm:bottom-16 left-1/2 -translate-x-1/2 z-40 pointer-events-auto max-w-[90vw]">
           <button
             onClick={() => {
