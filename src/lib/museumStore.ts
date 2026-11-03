@@ -23,7 +23,10 @@ export function getMuseumConfig(): MuseumConfig {
             (ex.videoUrl.includes('commondatastorage.googleapis.com') ||
               ex.videoUrl.includes('gtv-videos-bucket'))
           ) {
-            return { ...ex, videoUrl: '/videos/sample.mp4' };
+            ex.videoUrl = '/videos/sample.mp4';
+          }
+          if (ex.imageUrl && ex.imageUrl.includes('w=1200&q=80')) {
+            ex.imageUrl = ex.imageUrl.replace('w=1200&q=80', 'w=2400&q=95');
           }
           return ex;
         })

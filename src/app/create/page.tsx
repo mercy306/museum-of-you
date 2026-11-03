@@ -223,7 +223,7 @@ export default function CreateMuseumPage() {
       const src = e.target?.result as string;
       const img = new Image();
       img.onload = () => {
-        const maxDim = 850;
+        const maxDim = 1920;
         let w = img.width;
         let h = img.height;
         if (w > maxDim || h > maxDim) {
@@ -240,8 +240,11 @@ export default function CreateMuseumPage() {
         canvas.height = h;
         const ctx = canvas.getContext('2d');
         if (ctx) {
+          // HD high-quality image smoothing
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
           ctx.drawImage(img, 0, 0, w, h);
-          const compressed = canvas.toDataURL('image/jpeg', 0.72);
+          const compressed = canvas.toDataURL('image/jpeg', 0.88);
           updateExhibit(galleryId, exhibitId, {
             imageUrl: compressed,
             videoUrl: undefined,

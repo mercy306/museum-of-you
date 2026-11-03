@@ -82,7 +82,7 @@ export function ExhibitDetailModal({ exhibit, galleryName, onClose }: ExhibitDet
                     <img
                       src={resolvedImageUrl}
                       alt={exhibit.title}
-                      className={`w-full h-full object-cover transition-all duration-700 ${
+                      className={`w-full h-full object-contain max-h-[65vh] transition-all duration-700 ${
                         isClassified ? 'blur-xl grayscale scale-105' : 'blur-0 grayscale-0 scale-100'
                       }`}
                     />

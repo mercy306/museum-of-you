@@ -798,28 +798,36 @@ function FramedArtwork({
       getAssetPath(exhibit.imageUrl),
       (tex) => {
         tex.colorSpace = THREE.SRGBColorSpace;
+        tex.generateMipmaps = true;
+        tex.minFilter = THREE.LinearMipmapLinearFilter;
+        tex.magFilter = THREE.LinearFilter;
+        tex.anisotropy = 16;
+        tex.needsUpdate = true;
         setTexture(tex);
       },
       undefined,
       () => {
         const canvas = document.createElement('canvas');
-        canvas.width = 512;
-        canvas.height = 512;
+        canvas.width = 1024;
+        canvas.height = 1024;
         const ctx = canvas.getContext('2d');
         if (ctx) {
           ctx.fillStyle = '#1e1c19';
-          ctx.fillRect(0, 0, 512, 512);
+          ctx.fillRect(0, 0, 1024, 1024);
           ctx.fillStyle = '#c5a059';
-          ctx.font = 'bold 32px serif';
+          ctx.font = 'bold 48px serif';
           ctx.textAlign = 'center';
-          ctx.fillText(exhibit.title, 256, 240);
+          ctx.fillText(exhibit.title, 512, 480);
           if (isVideo) {
             ctx.fillStyle = '#ff4d4d';
-            ctx.font = 'bold 24px sans-serif';
-            ctx.fillText('▶ 4K VIDEO EXHIBIT', 256, 300);
+            ctx.font = 'bold 36px sans-serif';
+            ctx.fillText('▶ 4K VIDEO EXHIBIT', 512, 560);
           }
         }
-        setTexture(new THREE.CanvasTexture(canvas));
+        const fallbackTex = new THREE.CanvasTexture(canvas);
+        fallbackTex.colorSpace = THREE.SRGBColorSpace;
+        fallbackTex.anisotropy = 16;
+        setTexture(fallbackTex);
       }
     );
   }, [exhibit.imageUrl, exhibit.title, isVideo]);
@@ -853,7 +861,7 @@ function FramedArtwork({
       <mesh position={[0, 0, 0.06]}>
         <planeGeometry args={[frameWidth - 0.28, frameHeight - 0.28]} />
         {texture ? (
-          <meshBasicMaterial map={texture} />
+          <meshBasicMaterial map={texture} toneMapped={false} />
         ) : (
           <meshStandardMaterial color="#2d2a26" roughness={0.6} />
         )}
@@ -1906,7 +1914,7 @@ export function MuseumWalkthrough3D({
         }}
         gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
         camera={{ fov: 64, near: 0.1, far: 200, position: [0, 1.65, 2] }}
-        dpr={[1, 1.8]}
+        dpr={[1, 2]}
       >
         <color attach="background" args={['#c2dff2']} />
 
