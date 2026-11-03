@@ -5,7 +5,8 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { PointerLockControls, Float } from '@react-three/drei';
 import * as THREE from 'three';
 import confetti from 'canvas-confetti';
-import { MuseumConfig, Exhibit } from '@/types/museum';
+import { MuseumConfig, Exhibit, ArcadeManifest, MysteryBoxItem, HiddenMemoryItem } from '@/types/museum';
+import { ArcadeCabinet3D, MysteryGiftBox3D, HiddenMemoryToken3D } from './Arcade3DElements';
 import {
   Sparkles,
   Music,
@@ -18,7 +19,9 @@ import {
   Move,
   ZoomIn,
   ZoomOut,
-  RotateCcw
+  RotateCcw,
+  Gamepad2,
+  Gift
 } from 'lucide-react';
 
 // Suppress Three.js r187 deprecation notices triggered by R3F internal bindings
@@ -46,6 +49,12 @@ interface MuseumWalkthrough3DProps {
   currentRoomIndex?: number;
   onRoomChange?: (roomIndex: number) => void;
   onAddMedia?: () => void;
+  arcade?: ArcadeManifest;
+  collectedMemoryIds?: string[];
+  openedBoxIds?: string[];
+  onOpenArcade?: (defaultTab?: 'caption' | 'trivia' | 'scavenger' | 'boxes') => void;
+  onOpenMysteryBox?: (box: MysteryBoxItem) => void;
+  onCollectHiddenMemory?: (memory: HiddenMemoryItem) => void;
 }
 
 // Synthesize mechanical door latch + wooden swing sound using Web Audio API
@@ -130,9 +139,14 @@ function PlayerController({
   onNearCakeChange,
   onNearWishesChange,
   onNearDoorChange,
+  onNearArcadeChange,
+  onNearMysteryBoxChange,
+  onNearHiddenMemoryChange,
   onPlayerPositionChange,
   doors,
   exhibitsWithPositions,
+  arcade,
+  collectedMemoryIds = [],
   isTouring,
   teleportTarget,
   joystickInput,
@@ -143,9 +157,14 @@ function PlayerController({
   onNearCakeChange: (nearCake: boolean) => void;
   onNearWishesChange: (nearWishes: boolean) => void;
   onNearDoorChange: (door: { id: 1 | 2 | 3; title: string; isOpen: boolean } | null) => void;
+  onNearArcadeChange: (near: boolean) => void;
+  onNearMysteryBoxChange: (box: MysteryBoxItem | null) => void;
+  onNearHiddenMemoryChange: (memory: HiddenMemoryItem | null) => void;
   onPlayerPositionChange: (pos: [number, number, number]) => void;
   doors: { door1: boolean; door2: boolean; door3: boolean };
   exhibitsWithPositions: { exhibit: Exhibit; position: [number, number, number] }[];
+  arcade?: ArcadeManifest;
+  collectedMemoryIds?: string[];
   isTouring: boolean;
   teleportTarget: [number, number, number] | null;
   joystickInput: { x: number; y: number };
@@ -319,6 +338,41 @@ function PlayerController({
     // Check proximity to Study Desk & Friend Wishes at (-7, 0, -72)
     const distToWishes = camera.position.distanceTo(new THREE.Vector3(-7, 1.65, -72));
     onNearWishesChange(distToWishes < 3.2);
+
+    // Check proximity to Arcade Machines (Room 2 at [-6.8, 0, -25], Room 3 at [6.8, 0, -47])
+    const distToArcade1 = camera.position.distanceTo(new THREE.Vector3(-6.8, 1.65, -25.0));
+    const distToArcade2 = camera.position.distanceTo(new THREE.Vector3(6.8, 1.65, -47.0));
+    onNearArcadeChange(distToArcade1 < 3.0 || distToArcade2 < 3.0);
+
+    // Check proximity to Mystery Gift Boxes
+    let closestBox: MysteryBoxItem | null = null;
+    let minBoxDist = 2.8;
+    if (arcade?.mysteryBoxes) {
+      for (const box of arcade.mysteryBoxes) {
+        const dist = camera.position.distanceTo(new THREE.Vector3(...box.position));
+        if (dist < minBoxDist) {
+          minBoxDist = dist;
+          closestBox = box;
+        }
+      }
+    }
+    onNearMysteryBoxChange(closestBox);
+
+    // Check proximity to Hidden Memories (uncollected)
+    let closestMem: HiddenMemoryItem | null = null;
+    let minMemDist = 2.6;
+    if (arcade?.hiddenMemories) {
+      for (const mem of arcade.hiddenMemories) {
+        if (!collectedMemoryIds.includes(mem.id)) {
+          const dist = camera.position.distanceTo(new THREE.Vector3(...mem.position));
+          if (dist < minMemDist) {
+            minMemDist = dist;
+            closestMem = mem;
+          }
+        }
+      }
+    }
+    onNearHiddenMemoryChange(closestMem);
   });
 
   return null;
@@ -1158,13 +1212,22 @@ export function MuseumWalkthrough3D({
   onOpenWishes,
   currentRoomIndex = 1,
   onRoomChange,
-  onAddMedia
+  onAddMedia,
+  arcade,
+  collectedMemoryIds = [],
+  openedBoxIds = [],
+  onOpenArcade,
+  onOpenMysteryBox,
+  onCollectHiddenMemory
 }: MuseumWalkthrough3DProps) {
   const [isLocked, setIsLocked] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
   const [nearbyExhibit, setNearbyExhibit] = useState<Exhibit | null>(null);
   const [isNearCake, setIsNearCake] = useState(false);
   const [isNearWishes, setIsNearWishes] = useState(false);
+  const [isNearArcade, setIsNearArcade] = useState(false);
+  const [nearMysteryBox, setNearMysteryBox] = useState<MysteryBoxItem | null>(null);
+  const [nearHiddenMemory, setNearHiddenMemory] = useState<HiddenMemoryItem | null>(null);
   const [nearDoor, setNearDoor] = useState<{ id: 1 | 2 | 3; title: string; isOpen: boolean } | null>(null);
   const [candlesBlown, setCandlesBlown] = useState(false);
   const [showCelebrationBanner, setShowCelebrationBanner] = useState(false);
@@ -1379,6 +1442,12 @@ export function MuseumWalkthrough3D({
       if (e.code === 'KeyE' || e.key === 'e' || e.key === 'E') {
         if (nearDoor) {
           handleToggleDoor(nearDoor.id);
+        } else if (nearHiddenMemory) {
+          onCollectHiddenMemory?.(nearHiddenMemory);
+        } else if (nearMysteryBox) {
+          onOpenMysteryBox?.(nearMysteryBox);
+        } else if (isNearArcade) {
+          onOpenArcade?.();
         } else if (isNearCake && !candlesBlown) {
           handleCelebrateAndBlowCandles();
         } else if (isNearWishes) {
@@ -1390,7 +1459,21 @@ export function MuseumWalkthrough3D({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [nearDoor, nearbyExhibit, isNearCake, isNearWishes, candlesBlown, onInspectExhibit, onOpenWishes]);
+  }, [
+    nearDoor,
+    nearbyExhibit,
+    isNearCake,
+    isNearWishes,
+    isNearArcade,
+    nearMysteryBox,
+    nearHiddenMemory,
+    candlesBlown,
+    onInspectExhibit,
+    onOpenWishes,
+    onOpenArcade,
+    onOpenMysteryBox,
+    onCollectHiddenMemory
+  ]);
 
   // Current Zoom factor label e.g. "1.0x", "1.5x", "2.0x"
   const currentZoomFactor = useMemo(() => {
@@ -1434,9 +1517,14 @@ export function MuseumWalkthrough3D({
           onNearCakeChange={setIsNearCake}
           onNearWishesChange={setIsNearWishes}
           onNearDoorChange={setNearDoor}
+          onNearArcadeChange={setIsNearArcade}
+          onNearMysteryBoxChange={setNearMysteryBox}
+          onNearHiddenMemoryChange={setNearHiddenMemory}
           onPlayerPositionChange={handlePlayerPositionChange}
           doors={doors}
           exhibitsWithPositions={exhibitsWithPositions}
+          arcade={arcade}
+          collectedMemoryIds={collectedMemoryIds}
           isTouring={isTouring}
           teleportTarget={teleportTarget}
           joystickInput={joystickInput}
@@ -1452,6 +1540,38 @@ export function MuseumWalkthrough3D({
         )}
 
         <LuxuryVillaStepByStepArchitecture doors={doors} candlesBlown={candlesBlown} />
+
+        {/* 3D Arcade Cabinets in Room 2 (Funny) and Room 3 (Fails) */}
+        <ArcadeCabinet3D
+          position={[-6.8, 0, -25]}
+          rotation={[0, Math.PI / 2, 0]}
+          title="MISCHIEF ARCADE"
+          color="#9f7aea"
+        />
+        <ArcadeCabinet3D
+          position={[6.8, 0, -47]}
+          rotation={[0, -Math.PI / 2, 0]}
+          title="MISCHIEF ARCADE"
+          color="#ed8936"
+        />
+
+        {/* 3D Mystery Gift Boxes */}
+        {arcade?.mysteryBoxes.map((box) => (
+          <MysteryGiftBox3D
+            key={box.id}
+            box={box}
+            isOpened={openedBoxIds.includes(box.id)}
+          />
+        ))}
+
+        {/* 3D Hidden Memory Tokens */}
+        {arcade?.hiddenMemories.map((mem) => (
+          <HiddenMemoryToken3D
+            key={mem.id}
+            memory={mem}
+            isCollected={collectedMemoryIds.includes(mem.id)}
+          />
+        ))}
 
         {exhibitsWithPositions.map((item) => (
           <FramedArtwork
@@ -1570,6 +1690,63 @@ export function MuseumWalkthrough3D({
             <div className="flex items-center gap-1.5">
               {nearDoor.isOpen ? <DoorOpen className="w-4 h-4" /> : <DoorClosed className="w-4 h-4" />}
               <span>{nearDoor.isOpen ? `Close Door` : `Open Door: ${nearDoor.title}`}</span>
+            </div>
+          </button>
+        </div>
+      )}
+
+      {/* NEAR HIDDEN MEMORY INTERACTION PROMPT */}
+      {nearHiddenMemory && !nearDoor && (
+        <div className="absolute bottom-20 sm:bottom-16 left-1/2 -translate-x-1/2 z-40 pointer-events-auto max-w-[90vw]">
+          <button
+            onClick={() => onCollectHiddenMemory?.(nearHiddenMemory)}
+            className="flex items-center gap-2.5 px-6 sm:px-8 py-3 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-neutral-950 font-display font-black text-xs sm:text-sm tracking-wider shadow-2xl hover:scale-105 transition-all cursor-pointer animate-bounce border-2 border-white"
+          >
+            <span className="w-6 h-6 rounded-full bg-neutral-950 text-amber-400 font-mono font-black text-xs flex items-center justify-center">
+              {isTouchDevice ? '👆' : 'E'}
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-base">{nearHiddenMemory.icon}</span>
+              <span>Collect Hidden Memory: {nearHiddenMemory.title} ⭐</span>
+            </div>
+          </button>
+        </div>
+      )}
+
+      {/* NEAR MYSTERY BOX INTERACTION PROMPT */}
+      {nearMysteryBox && !nearDoor && !nearHiddenMemory && (
+        <div className="absolute bottom-20 sm:bottom-16 left-1/2 -translate-x-1/2 z-40 pointer-events-auto max-w-[90vw]">
+          <button
+            onClick={() => onOpenMysteryBox?.(nearMysteryBox)}
+            className="flex items-center gap-2.5 px-6 sm:px-7 py-3 rounded-full bg-gradient-to-r from-amber-500 via-rose-500 to-yellow-500 text-white font-display font-bold text-xs sm:text-sm tracking-wider shadow-2xl hover:scale-105 transition-all cursor-pointer animate-pulse border-2 border-white"
+          >
+            <span className="w-6 h-6 rounded-full bg-white text-rose-600 font-mono font-black text-xs flex items-center justify-center">
+              {isTouchDevice ? '👆' : 'E'}
+            </span>
+            <div className="flex items-center gap-1.5">
+              <Gift className="w-4 h-4" />
+              <span>
+                {openedBoxIds.includes(nearMysteryBox.id) ? 'Inspect Surprise: ' : 'Unwrap Mystery Box: '}
+                {nearMysteryBox.title} 🎁
+              </span>
+            </div>
+          </button>
+        </div>
+      )}
+
+      {/* NEAR ARCADE STATION INTERACTION PROMPT */}
+      {isNearArcade && !nearDoor && !nearHiddenMemory && !nearMysteryBox && (
+        <div className="absolute bottom-20 sm:bottom-16 left-1/2 -translate-x-1/2 z-40 pointer-events-auto max-w-[90vw]">
+          <button
+            onClick={() => onOpenArcade?.()}
+            className="flex items-center gap-2.5 px-6 sm:px-8 py-3 rounded-full bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 text-white font-display font-bold text-xs sm:text-sm tracking-wider shadow-2xl hover:scale-105 transition-all cursor-pointer animate-pulse border-2 border-white"
+          >
+            <span className="w-6 h-6 rounded-full bg-white text-purple-700 font-mono font-black text-xs flex items-center justify-center">
+              {isTouchDevice ? '👆' : 'E'}
+            </span>
+            <div className="flex items-center gap-1.5">
+              <Gamepad2 className="w-4 h-4" />
+              <span>Play Museum Mischief Arcade 🕹️</span>
             </div>
           </button>
         </div>

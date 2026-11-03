@@ -12,7 +12,12 @@ export function getMuseumConfig(): MuseumConfig {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return defaultMuseumData;
     const parsed = JSON.parse(raw);
-    return parsed?.profile?.name ? parsed : defaultMuseumData;
+    if (!parsed?.profile?.name) return defaultMuseumData;
+    return {
+      ...defaultMuseumData,
+      ...parsed,
+      arcade: parsed.arcade || defaultMuseumData.arcade
+    };
   } catch (error) {
     console.warn('Failed to parse stored museum config, using default data:', error);
     return defaultMuseumData;

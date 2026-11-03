@@ -97,12 +97,70 @@ export interface FriendWish {
   isCustom?: boolean;
 }
 
+export interface CaptionThisQuestion {
+  id: string;
+  photoUrl: string;
+  context: string;
+  options: {
+    id: string;
+    caption: string;
+    funnyRating: number; // e.g. 98%
+    reaction: string;
+  }[];
+}
+
+export interface WhoKnowsMeQuestion {
+  id: string;
+  question: string;
+  options: {
+    id: string;
+    text: string;
+    isCorrect: boolean;
+    curatorFeedback: string;
+  }[];
+}
+
+export interface HiddenMemoryItem {
+  id: string;
+  title: string;
+  hint: string;
+  roomName: string;
+  roomNumber: number;
+  position: [number, number, number];
+  icon: string;
+  revealedStory: string;
+}
+
+export interface MysteryBoxItem {
+  id: string;
+  title: string;
+  roomName: string;
+  roomNumber: number;
+  position: [number, number, number];
+  boxColor: string;
+  ribbonColor: string;
+  reward: {
+    type: 'gag' | 'photo' | 'song' | 'badge';
+    title: string;
+    message: string;
+    imageUrl?: string;
+  };
+}
+
+export interface ArcadeManifest {
+  captionThis: CaptionThisQuestion[];
+  whoKnowsMeBest: WhoKnowsMeQuestion[];
+  hiddenMemories: HiddenMemoryItem[];
+  mysteryBoxes: MysteryBoxItem[];
+}
+
 export interface MuseumConfig {
   id: string;
   createdAt: string;
   updatedAt: string;
   profile: PersonProfile;
   galleries: Gallery[];
+  arcade?: ArcadeManifest;
   settings: {
     enableSoundtrack: boolean;
     enableGuidedTour: boolean;

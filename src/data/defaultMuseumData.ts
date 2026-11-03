@@ -271,5 +271,341 @@ export const defaultMuseumData: MuseumConfig = {
         }
       ]
     }
-  ]
+  ],
+  arcade: {
+    captionThis: [
+      {
+        id: 'cap-1',
+        photoUrl: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=1200&q=80',
+        context: 'Alex attempting to cook a 5-star meal while reading instructions upside down.',
+        options: [
+          {
+            id: 'c1-1',
+            caption: 'Gordon Ramsay has left the chat, weeping.',
+            funnyRating: 98,
+            reaction: '🔥 Absolute Savage! The kitchen smoke alarm agrees.'
+          },
+          {
+            id: 'c1-2',
+            caption: 'The recipe called for 2 pinches of salt; I poured the whole jar.',
+            funnyRating: 85,
+            reaction: '🧂 Dehydration is simply part of the flavor profile.'
+          },
+          {
+            id: 'c1-3',
+            caption: 'Just according to plan. The crispy black crust adds antioxidants.',
+            funnyRating: 92,
+            reaction: '🧑‍🍳 Michelin inspectors are currently calling an ambulance.'
+          }
+        ]
+      },
+      {
+        id: 'cap-2',
+        photoUrl: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=1200&q=80',
+        context: 'Summer 2008: The era of heavy bangs, raccoon eyeliner, and teen angst.',
+        options: [
+          {
+            id: 'c2-1',
+            caption: 'It’s not just a phase, Mom! This is my true authentic soul!',
+            funnyRating: 99,
+            reaction: '🎸 My Chemical Romance is blaring from a Motorola Razr right now.'
+          },
+          {
+            id: 'c2-2',
+            caption: 'Hair so stiff with gel it could deflect direct meteorite impacts.',
+            funnyRating: 94,
+            reaction: '🌪️ Hurricane category 5 could not bend that fringe.'
+          },
+          {
+            id: 'c2-3',
+            caption: 'Looking down so nobody notices I’m wearing three studded belts.',
+            funnyRating: 88,
+            reaction: '🖤 The Hot Topic rewards card was burning a hole in your pocket.'
+          }
+        ]
+      },
+      {
+        id: 'cap-3',
+        photoUrl: 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=1200&q=80',
+        context: '2:15 AM: Caught by the refrigerator light consuming shredded cheese like a wild raccoon.',
+        options: [
+          {
+            id: 'c3-1',
+            caption: 'If I don’t chew, the calories don’t count.',
+            funnyRating: 96,
+            reaction: '🧀 Sound nutritional science, backed by midnight biology.'
+          },
+          {
+            id: 'c3-2',
+            caption: 'I swear I was just checking the temperature of the milk.',
+            funnyRating: 84,
+            reaction: '🥛 The cheese in your teeth tells another story.'
+          },
+          {
+            id: 'c3-3',
+            caption: 'A creature of the night performing an essential culinary audit.',
+            funnyRating: 97,
+            reaction: '🦝 Official Title: Senior Midnight Snack Inspector.'
+          }
+        ]
+      },
+      {
+        id: 'cap-4',
+        photoUrl: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1200&q=80',
+        context: 'Belted Bohemian Rhapsody into a salt shaker at 3 AM.',
+        options: [
+          {
+            id: 'c4-1',
+            caption: 'Pitch is subjective, but passion is mandatory.',
+            funnyRating: 99,
+            reaction: '🎤 Freddie Mercury just smiled from the great beyond.'
+          },
+          {
+            id: 'c4-2',
+            caption: 'When they tell you last call was 20 minutes ago, sing louder.',
+            funnyRating: 91,
+            reaction: '🍻 The bouncer is impressed by your audacity.'
+          },
+          {
+            id: 'c4-3',
+            caption: 'Hitting notes that only canine ears can properly appreciate.',
+            funnyRating: 95,
+            reaction: '🐶 Every dog in a 4-mile radius is howling in harmony.'
+          }
+        ]
+      }
+    ],
+    whoKnowsMeBest: [
+      {
+        id: 'wkm-1',
+        question: 'What is Alex’s most notorious excuse for running 20 minutes late?',
+        options: [
+          {
+            id: 'opt-1a',
+            text: '“I couldn’t find my keys, which were in my hand the whole time.”',
+            isCorrect: true,
+            curatorFeedback: 'Spot on! Classical Alex behavior confirmed by independent observers.'
+          },
+          {
+            id: 'opt-1b',
+            text: '“I was caught in heavy interstate helicopter traffic.”',
+            isCorrect: false,
+            curatorFeedback: 'A great excuse, but Alex usually blames everyday objects like socks.'
+          },
+          {
+            id: 'opt-1c',
+            text: '“My alarm didn’t go off because my phone was too tired.”',
+            isCorrect: false,
+            curatorFeedback: 'Close second, but the key dilemma remains undisputed champion.'
+          }
+        ]
+      },
+      {
+        id: 'wkm-2',
+        question: 'What does Alex consider a "light, healthy snack"?',
+        options: [
+          {
+            id: 'opt-2a',
+            text: 'Celery sticks and a glass of warm spring water.',
+            isCorrect: false,
+            curatorFeedback: 'Never in recorded human history has Alex voluntarily chosen celery.'
+          },
+          {
+            id: 'opt-2b',
+            text: 'Half a party-size bag of spicy tortilla chips with melted cheese at midnight.',
+            isCorrect: true,
+            curatorFeedback: 'Bingo! Pure refined gold standard of Alex midnight nutrition.'
+          },
+          {
+            id: 'opt-2c',
+            text: 'A protein shake made of kale and crushed dreams.',
+            isCorrect: false,
+            curatorFeedback: 'Incorrect. If it does not contain carbs or cheese, Alex is suspicious.'
+          }
+        ]
+      },
+      {
+        id: 'wkm-3',
+        question: 'How many unread notifications and open browser tabs does Alex currently have?',
+        options: [
+          {
+            id: 'opt-3a',
+            text: 'Zero, inbox zero discipline at all times.',
+            isCorrect: false,
+            curatorFeedback: 'Hahahaha! You clearly don’t know Alex at all.'
+          },
+          {
+            id: 'opt-3b',
+            text: 'Somewhere between 47 open tabs and 1,842 unread group chat texts.',
+            isCorrect: true,
+            curatorFeedback: 'Exact science! Each tab represents an unfinished ambition or abandoned shopping cart.'
+          },
+          {
+            id: 'opt-3c',
+            text: 'Exactly 3 tabs: Google, Weather, and Netflix.',
+            isCorrect: false,
+            curatorFeedback: 'Way too organized for the Architect of Chaos.'
+          }
+        ]
+      },
+      {
+        id: 'wkm-4',
+        question: 'If you lose Alex in a crowded store or party, where are they guaranteed to be?',
+        options: [
+          {
+            id: 'opt-4a',
+            text: 'Befriending the host’s dog or inspecting the snack table.',
+            isCorrect: true,
+            curatorFeedback: '100% Guaranteed! The dog knows all of Alex’s deepest secrets by now.'
+          },
+          {
+            id: 'opt-4b',
+            text: 'Standing silently in the corner contemplating quantum mechanics.',
+            isCorrect: false,
+            curatorFeedback: 'Silence is not in Alex’s diagnostic manual.'
+          },
+          {
+            id: 'opt-4c',
+            text: 'Organizing the coat closet by color hierarchy.',
+            isCorrect: false,
+            curatorFeedback: 'Alex couldn’t color-code their own closet, let alone someone else’s!'
+          }
+        ]
+      },
+      {
+        id: 'wkm-5',
+        question: 'What is Alex’s absolute superpower in any group crisis?',
+        options: [
+          {
+            id: 'opt-5a',
+            text: 'Dropping a shockingly hilarious meme that instantly diffuses all tension.',
+            isCorrect: true,
+            curatorFeedback: 'The Nobel Peace Prize of Group Chats! That’s our Alex.'
+          },
+          {
+            id: 'opt-5b',
+            text: 'Writing a 10-page analytical spreadsheet with pivot tables.',
+            isCorrect: false,
+            curatorFeedback: 'Spreadsheets bring Alex out in a sympathetic rash.'
+          },
+          {
+            id: 'opt-5c',
+            text: 'Fleeing the country under an assumed alias.',
+            isCorrect: false,
+            curatorFeedback: 'Tempting, but comedic defusal always comes first.'
+          }
+        ]
+      }
+    ],
+    hiddenMemories: [
+      {
+        id: 'mem-1',
+        title: 'The Lost Golden Guitar Pick',
+        hint: 'Tucked behind the concert grand piano in Room 1.',
+        roomName: 'Room 1 · Memorable Moments',
+        roomNumber: 1,
+        position: [-6.5, 0.4, -4.0],
+        icon: '🎸',
+        revealedStory: 'Dropped during an enthusiastic rendition of "Wonderwall" in 2017. Never recovered until now.'
+      },
+      {
+        id: 'mem-2',
+        title: 'The Burnt Soufflé Whisk',
+        hint: 'Resting near the modern linear fireplace in Room 1.',
+        roomName: 'Room 1 · Memorable Moments',
+        roomNumber: 1,
+        position: [-4.2, 0.5, -4.8],
+        icon: '🔥',
+        revealedStory: 'The legendary survivor of the 2022 kitchen flambé disaster. The smoke alarm sends its regards.'
+      },
+      {
+        id: 'mem-3',
+        title: 'The 11th Mystery IKEA Screw',
+        hint: 'Perched on the pedestal in Room 2.',
+        roomName: 'Room 2 · Funny Memories',
+        roomNumber: 2,
+        position: [0.3, 0.95, -25.2],
+        icon: '🔩',
+        revealedStory: 'Where did it belong? Nobody knows. The coffee table still leans 15 degrees, but it stands proud.'
+      },
+      {
+        id: 'mem-4',
+        title: 'The Classified VHS Tape',
+        hint: 'Hidden behind the red alert warning post in Room 3.',
+        roomName: 'Room 3 · Embarrassing Images',
+        roomNumber: 3,
+        position: [6.8, 0.5, -46.0],
+        icon: '📼',
+        revealedStory: 'Contains 47 minutes of middle school lip-syncing and dramatic air guitar. Rated TOP SECRET.'
+      },
+      {
+        id: 'mem-5',
+        title: 'The Golden Birthday Sparkler',
+        hint: 'Gleaming directly below the 3-tier birthday cake in Room 4.',
+        roomName: 'Room 4 · Wishes & Celebration',
+        roomNumber: 4,
+        position: [0, 0.35, -73.2],
+        icon: '✨',
+        revealedStory: 'The ceremonial VIP sparkler reserved for the milestone birthday celebration of a lifetime.'
+      }
+    ],
+    mysteryBoxes: [
+      {
+        id: 'box-1',
+        title: 'The Portico Surprise Box',
+        roomName: 'Room 1 · Memorable Moments',
+        roomNumber: 1,
+        position: [-5.5, 0, 0.5],
+        boxColor: '#c53030',
+        ribbonColor: '#f6e05e',
+        reward: {
+          type: 'badge',
+          title: '🏅 Certified Architect of Chaos Badge',
+          message: 'Official Accreditation: Awarded for navigating 30 years of questionable life choices with 100% confidence.'
+        }
+      },
+      {
+        id: 'box-2',
+        title: 'The Comedy Relic Box',
+        roomName: 'Room 2 · Funny Memories',
+        roomNumber: 2,
+        position: [6.0, 0, -22.0],
+        boxColor: '#d69e2e',
+        ribbonColor: '#1a202c',
+        reward: {
+          type: 'gag',
+          title: '📜 Lifetime 3:00 AM Snack Immunity Voucher',
+          message: 'This voucher entitles Alex to raid any refrigerator worldwide at 3:00 AM without parental, spousal, or societal judgment.'
+        }
+      },
+      {
+        id: 'box-3',
+        title: 'The Classified Vault Crate',
+        roomName: 'Room 3 · Embarrassing Images',
+        roomNumber: 3,
+        position: [-6.2, 0, -45.0],
+        boxColor: '#1a1a1a',
+        ribbonColor: '#e53e3e',
+        reward: {
+          type: 'photo',
+          title: '🕵️ Classified Declassification Order #007',
+          message: 'The Presidential Archival Board has reviewed your childhood haircuts and declared: "Honestly, you pulled it off better than expected."'
+        }
+      },
+      {
+        id: 'box-4',
+        title: 'The Grand Celebration Gift',
+        roomName: 'Room 4 · Wishes & Celebration',
+        roomNumber: 4,
+        position: [6.5, 0, -78.0],
+        boxColor: '#ed64a6',
+        ribbonColor: '#ecc94b',
+        reward: {
+          type: 'song',
+          title: '👑 Royal Birthday Fanfare & Endless Wishes',
+          message: 'May your next 30 years be filled with uncontrollable laughter, loyal friends, wild adventures, and zero hangovers!'
+        }
+      }
+    ]
+  }
 };
