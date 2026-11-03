@@ -6,7 +6,7 @@ import { PointerLockControls, Float } from '@react-three/drei';
 import * as THREE from 'three';
 import confetti from 'canvas-confetti';
 import { MuseumConfig, Exhibit } from '@/types/museum';
-import { Sparkles, Music, Video, Image as ImageIcon, DoorOpen, DoorClosed, PartyPopper, Check } from 'lucide-react';
+import { Sparkles, Music, Video, Image as ImageIcon, DoorOpen, DoorClosed, PartyPopper, Compass, Move } from 'lucide-react';
 
 // Suppress Three.js r187 deprecation notices triggered by R3F internal bindings
 if (typeof window !== 'undefined') {
@@ -111,7 +111,7 @@ function isValidPosition(
   return false;
 }
 
-// First-person WASD Player Controller
+// First-person WASD & Touch Mobile Player Controller
 function PlayerController({
   onNearExhibitChange,
   onNearCakeChange,
@@ -121,7 +121,9 @@ function PlayerController({
   doors,
   exhibitsWithPositions,
   isTouring,
-  teleportTarget
+  teleportTarget,
+  joystickInput,
+  touchLookDelta
 }: {
   onNearExhibitChange: (exhibit: Exhibit | null) => void;
   onNearCakeChange: (nearCake: boolean) => void;
@@ -132,11 +134,14 @@ function PlayerController({
   exhibitsWithPositions: { exhibit: Exhibit; position: [number, number, number] }[];
   isTouring: boolean;
   teleportTarget: [number, number, number] | null;
+  joystickInput: { x: number; y: number };
+  touchLookDelta: React.MutableRefObject<{ x: number; y: number }>;
 }) {
   const { camera } = useThree();
   const keys = useRef<{ [key: string]: boolean }>({});
   const velocity = useRef(new THREE.Vector3());
   const tourProgress = useRef(0);
+  const euler = useRef(new THREE.Euler(0, 0, 0, 'YXZ'));
 
   const tourWaypoints = useMemo(() => {
     return [
@@ -162,6 +167,7 @@ function PlayerController({
   useEffect(() => {
     camera.position.set(0, 1.65, 2);
     camera.lookAt(0, 1.65, -6);
+    euler.current.setFromQuaternion(camera.quaternion);
 
     const handleKeyDown = (e: KeyboardEvent) => {
       keys.current[e.code] = true;
@@ -183,10 +189,19 @@ function PlayerController({
     if (teleportTarget) {
       camera.position.set(...teleportTarget);
       camera.lookAt(teleportTarget[0], 1.65, teleportTarget[2] - 8);
+      euler.current.setFromQuaternion(camera.quaternion);
     }
   }, [teleportTarget, camera]);
 
   useFrame((_, delta) => {
+    // Touch Drag Camera Look for Mobile Phones
+    if (touchLookDelta.current.x !== 0 || touchLookDelta.current.y !== 0) {
+      euler.current.y -= touchLookDelta.current.x * 0.0035;
+      euler.current.x = Math.max(-1.15, Math.min(1.15, euler.current.x - touchLookDelta.current.y * 0.0035));
+      camera.quaternion.setFromEuler(euler.current);
+      touchLookDelta.current = { x: 0, y: 0 };
+    }
+
     if (isTouring) {
       tourProgress.current += delta * 0.07;
       const numPoints = tourWaypoints.length - 1;
@@ -209,12 +224,16 @@ function PlayerController({
     velocity.current.x -= velocity.current.x * damping * delta;
     velocity.current.z -= velocity.current.z * damping * delta;
 
-    const forwardInput =
+    // Support BOTH Desktop Keyboard (WASD) AND Mobile Touch Virtual Joystick
+    const keyboardForward =
       Number(Boolean(keys.current['KeyW'] || keys.current['ArrowUp'])) -
       Number(Boolean(keys.current['KeyS'] || keys.current['ArrowDown']));
-    const strafeInput =
+    const keyboardStrafe =
       Number(Boolean(keys.current['KeyD'] || keys.current['ArrowRight'])) -
       Number(Boolean(keys.current['KeyA'] || keys.current['ArrowLeft']));
+
+    const forwardInput = keyboardForward !== 0 ? keyboardForward : -joystickInput.y;
+    const strafeInput = keyboardStrafe !== 0 ? keyboardStrafe : joystickInput.x;
 
     if (forwardInput !== 0) velocity.current.z -= forwardInput * speed * delta * 12;
     if (strafeInput !== 0) velocity.current.x += strafeInput * speed * delta * 12;
@@ -330,14 +349,12 @@ function ArchitecturalPartitionWallWithDoor({
     }
   });
 
-  // Calculate solid wall dimensions flanking the doorway
-  const sideWidth = (width - doorWidth) / 2; // (18 - 2.8) / 2 = 7.6
-  const leftCenterX = -width / 2 + sideWidth / 2; // -9 + 3.8 = -5.2
-  const rightCenterX = width / 2 - sideWidth / 2; // 9 - 3.8 = +5.2
-  const lintelHeight = height - doorHeight; // 5.8 - 3.5 = 2.3
-  const lintelCenterY = doorHeight + lintelHeight / 2; // 3.5 + 1.15 = 4.65
+  const sideWidth = (width - doorWidth) / 2;
+  const leftCenterX = -width / 2 + sideWidth / 2;
+  const rightCenterX = width / 2 - sideWidth / 2;
+  const lintelHeight = height - doorHeight;
+  const lintelCenterY = doorHeight + lintelHeight / 2;
 
-  // Generate Plaque Texture for the Room Header
   const plaqueTexture = useMemo(() => {
     if (typeof window === 'undefined') return null;
     const canvas = document.createElement('canvas');
@@ -373,7 +390,6 @@ function ArchitecturalPartitionWallWithDoor({
         <boxGeometry args={[sideWidth, height, wallThickness]} />
         <meshStandardMaterial color={wallColor} roughness={0.4} />
       </mesh>
-      {/* Dark Walnut Baseboard Trim (Both Sides) */}
       <mesh position={[leftCenterX, 0.08, 0]}>
         <boxGeometry args={[sideWidth, 0.16, wallThickness + 0.04]} />
         <meshStandardMaterial color="#2c221a" roughness={0.5} />
@@ -384,7 +400,6 @@ function ArchitecturalPartitionWallWithDoor({
         <boxGeometry args={[sideWidth, height, wallThickness]} />
         <meshStandardMaterial color={wallColor} roughness={0.4} />
       </mesh>
-      {/* Dark Walnut Baseboard Trim (Both Sides) */}
       <mesh position={[rightCenterX, 0.08, 0]}>
         <boxGeometry args={[sideWidth, 0.16, wallThickness + 0.04]} />
         <meshStandardMaterial color="#2c221a" roughness={0.5} />
@@ -396,33 +411,27 @@ function ArchitecturalPartitionWallWithDoor({
         <meshStandardMaterial color={wallColor} roughness={0.4} />
       </mesh>
 
-      {/* 4. SOLID DOORWAY ARCHITRAVE / CASING (Embedded flush with the wall) */}
-      {/* Left Frame Post */}
+      {/* 4. SOLID DOORWAY ARCHITRAVE / CASING */}
       <mesh position={[-doorWidth / 2, doorHeight / 2, 0]} castShadow>
         <boxGeometry args={[0.18, doorHeight, wallThickness + 0.06]} />
         <meshStandardMaterial color="#2c221a" roughness={0.35} />
       </mesh>
-      {/* Right Frame Post */}
       <mesh position={[doorWidth / 2, doorHeight / 2, 0]} castShadow>
         <boxGeometry args={[0.18, doorHeight, wallThickness + 0.06]} />
         <meshStandardMaterial color="#2c221a" roughness={0.35} />
       </mesh>
-      {/* Top Frame Architrave Header */}
       <mesh position={[0, doorHeight + 0.09, 0]} castShadow>
         <boxGeometry args={[doorWidth + 0.36, 0.18, wallThickness + 0.08]} />
         <meshStandardMaterial color="#2c221a" roughness={0.35} />
       </mesh>
-      {/* Floor Threshold Bar in Brass */}
       <mesh position={[0, 0.02, 0]}>
         <boxGeometry args={[doorWidth + 0.1, 0.04, wallThickness + 0.08]} />
         <meshStandardMaterial color="#c5a059" metalness={0.8} roughness={0.3} />
       </mesh>
 
-      {/* Recessed Warm Downlight in Doorway Lintel */}
       <pointLight position={[0, doorHeight - 0.1, 0]} intensity={12} distance={3.5} color="#ffe2aa" />
 
-      {/* 5. OVERHEAD BRASS ROOM SIGN (Mounted on Wall above Architrave) */}
-      {/* South Facing Plaque (viewed from preceding room) */}
+      {/* 5. OVERHEAD BRASS ROOM SIGN */}
       <group position={[0, doorHeight + 0.55, wallThickness / 2 + 0.02]}>
         <mesh castShadow>
           <boxGeometry args={[2.2, 0.55, 0.04]} />
@@ -435,7 +444,6 @@ function ArchitecturalPartitionWallWithDoor({
         <pointLight position={[0, 0.1, 0.35]} intensity={8} distance={2.5} color="#ffeaa7" />
       </group>
 
-      {/* North Facing Plaque (viewed looking back from inside the room) */}
       <group position={[0, doorHeight + 0.55, -wallThickness / 2 - 0.02]} rotation={[0, Math.PI, 0]}>
         <mesh castShadow>
           <boxGeometry args={[2.2, 0.55, 0.04]} />
@@ -451,27 +459,22 @@ function ArchitecturalPartitionWallWithDoor({
       {/* 6. LEFT DOOR LEAF */}
       <group ref={leftHingeRef} position={[-doorWidth / 2 + 0.09, 0, 0]}>
         <group position={[doorWidth / 4 - 0.045, doorHeight / 2, 0]}>
-          {/* Main Solid Wood Door Slab */}
           <mesh castShadow receiveShadow>
             <boxGeometry args={[doorWidth / 2 - 0.09, doorHeight - 0.08, 0.08]} />
             <meshStandardMaterial color="#3b2b20" roughness={0.35} />
           </mesh>
-          {/* Beveled Luxury Panels */}
           {[-0.8, 0.2, 1.0].map((yOff, pIdx) => (
             <React.Fragment key={pIdx}>
-              {/* Front Face Panel */}
               <mesh position={[0, yOff, 0.042]}>
                 <boxGeometry args={[doorWidth / 2 - 0.36, 0.65, 0.02]} />
                 <meshStandardMaterial color="#2e2118" roughness={0.4} />
               </mesh>
-              {/* Back Face Panel */}
               <mesh position={[0, yOff, -0.042]}>
                 <boxGeometry args={[doorWidth / 2 - 0.36, 0.65, 0.02]} />
                 <meshStandardMaterial color="#2e2118" roughness={0.4} />
               </mesh>
             </React.Fragment>
           ))}
-          {/* Brass Lever Handle (Both Sides) */}
           {[-0.05, 0.05].map((zHandle, hi) => (
             <group key={hi} position={[doorWidth / 4 - 0.22, -0.15, zHandle]}>
               <mesh rotation={[0, 0, 0]}>
@@ -490,27 +493,22 @@ function ArchitecturalPartitionWallWithDoor({
       {/* 7. RIGHT DOOR LEAF */}
       <group ref={rightHingeRef} position={[doorWidth / 2 - 0.09, 0, 0]}>
         <group position={[-(doorWidth / 4 - 0.045), doorHeight / 2, 0]}>
-          {/* Main Solid Wood Door Slab */}
           <mesh castShadow receiveShadow>
             <boxGeometry args={[doorWidth / 2 - 0.09, doorHeight - 0.08, 0.08]} />
             <meshStandardMaterial color="#3b2b20" roughness={0.35} />
           </mesh>
-          {/* Beveled Luxury Panels */}
           {[-0.8, 0.2, 1.0].map((yOff, pIdx) => (
             <React.Fragment key={pIdx}>
-              {/* Front Face Panel */}
               <mesh position={[0, yOff, 0.042]}>
                 <boxGeometry args={[doorWidth / 2 - 0.36, 0.65, 0.02]} />
                 <meshStandardMaterial color="#2e2118" roughness={0.4} />
               </mesh>
-              {/* Back Face Panel */}
               <mesh position={[0, yOff, -0.042]}>
                 <boxGeometry args={[doorWidth / 2 - 0.36, 0.65, 0.02]} />
                 <meshStandardMaterial color="#2e2118" roughness={0.4} />
               </mesh>
             </React.Fragment>
           ))}
-          {/* Brass Lever Handle (Both Sides) */}
           {[-0.05, 0.05].map((zHandle, hi) => (
             <group key={hi} position={[-(doorWidth / 4 - 0.22), -0.15, zHandle]}>
               <mesh rotation={[0, 0, 0]}>
@@ -582,13 +580,11 @@ function FramedArtwork({
 
   return (
     <group position={position} rotation={rotation}>
-      {/* Outer Frame */}
       <mesh position={[0, 0, 0.015]}>
         <boxGeometry args={[frameWidth + 0.08, frameHeight + 0.08, 0.03]} />
         <meshBasicMaterial color={isVideo ? '#121214' : '#1a1918'} />
       </mesh>
 
-      {/* Frame Trim: OLED Titanium Bezel for Video, Gilded Gold for Photo */}
       <mesh position={[0, 0, 0.038]} castShadow>
         <boxGeometry args={[frameWidth + 0.04, frameHeight + 0.04, 0.02]} />
         <meshStandardMaterial
@@ -598,13 +594,11 @@ function FramedArtwork({
         />
       </mesh>
 
-      {/* Screen / Matting */}
       <mesh position={[0, 0, 0.05]}>
         <boxGeometry args={[frameWidth, frameHeight, 0.01]} />
         <meshStandardMaterial color={isVideo ? '#08080a' : '#faf9f6'} roughness={0.8} />
       </mesh>
 
-      {/* Media Plane */}
       <mesh position={[0, 0, 0.06]}>
         <planeGeometry args={[frameWidth - 0.28, frameHeight - 0.28]} />
         {texture ? (
@@ -614,7 +608,6 @@ function FramedArtwork({
         )}
       </mesh>
 
-      {/* Video Indicator Icon in Center of Display */}
       {isVideo && (
         <group position={[0, 0, 0.075]}>
           <mesh>
@@ -628,7 +621,6 @@ function FramedArtwork({
         </group>
       )}
 
-      {/* Overhead Spotlight */}
       <spotLight
         position={[0, 2.5, 1.6]}
         target-position={[0, 0, 0]}
@@ -639,7 +631,6 @@ function FramedArtwork({
         color={isVideo ? '#e0f0ff' : '#fff3db'}
       />
 
-      {/* Subtle Bottom Brass Plaque */}
       <group position={[0, -frameHeight / 2 - 0.22, 0.03]}>
         <mesh>
           <boxGeometry args={[Math.min(frameWidth, 1.8), 0.18, 0.02]} />
@@ -665,17 +656,14 @@ function CelebrationBalloons({ position }: { position: [number, number, number] 
 
           return (
             <group key={idx} position={[x, y, z]}>
-              {/* Glossy Balloon Oval */}
               <mesh position={[0, 4.8, 0]} castShadow>
                 <sphereGeometry args={[0.36, 24, 24]} />
                 <meshStandardMaterial color={col} roughness={0.15} metalness={0.2} />
               </mesh>
-              {/* Balloon Knot */}
               <mesh position={[0, 4.42, 0]}>
                 <coneGeometry args={[0.06, 0.08, 12]} />
                 <meshStandardMaterial color={col} roughness={0.2} />
               </mesh>
-              {/* String */}
               <mesh position={[0, 3.4, 0]}>
                 <cylinderGeometry args={[0.003, 0.003, 2.0, 4]} />
                 <meshBasicMaterial color="#ffffff" transparent opacity={0.4} />
@@ -745,7 +733,7 @@ function LuxuryVillaStepByStepArchitecture({
       }),
       room1Wall: new THREE.MeshStandardMaterial({ color: '#f7f6f2', roughness: 0.4, side: THREE.DoubleSide }),
       room2Wall: new THREE.MeshStandardMaterial({ color: '#f3efe6', roughness: 0.4, side: THREE.DoubleSide }),
-      room3Wall: new THREE.MeshStandardMaterial({ color: '#1a1918', roughness: 0.5, side: THREE.DoubleSide }), // Moody classified gallery
+      room3Wall: new THREE.MeshStandardMaterial({ color: '#1a1918', roughness: 0.5, side: THREE.DoubleSide }),
       room4Wall: new THREE.MeshStandardMaterial({ color: '#f8f6f0', roughness: 0.35, side: THREE.DoubleSide }),
       ceilingWhite: new THREE.MeshStandardMaterial({ color: '#fcfcfc', roughness: 0.5, side: THREE.DoubleSide }),
       cakeIcing: new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.25 })
@@ -800,7 +788,6 @@ function LuxuryVillaStepByStepArchitecture({
       ))}
 
       {/* ===================== ROOM 1: MEMORABLE MOMENTS (Z: 4 to -14) ===================== */}
-      {/* Floor & Ceiling */}
       <mesh position={[0, 0, -5]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow material={materials.warmOakFloor}>
         <planeGeometry args={[18, 18]} />
       </mesh>
@@ -849,7 +836,6 @@ function LuxuryVillaStepByStepArchitecture({
       />
 
       {/* ===================== ROOM 2: FUNNY MEMORIES (Z: -14 to -36) ===================== */}
-      {/* Floor & Ceiling */}
       <mesh position={[0, 0, -25]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow material={materials.warmOakFloor}>
         <planeGeometry args={[18, 22]} />
       </mesh>
@@ -895,7 +881,6 @@ function LuxuryVillaStepByStepArchitecture({
       />
 
       {/* ===================== ROOM 3: EMBARRASSING IMAGES (Z: -36 to -58) ===================== */}
-      {/* Floor & Ceiling (Moody Dark Gallery Ambiance) */}
       <mesh position={[0, 0, -47]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow material={materials.warmOakFloor}>
         <planeGeometry args={[18, 22]} />
       </mesh>
@@ -933,7 +918,6 @@ function LuxuryVillaStepByStepArchitecture({
       />
 
       {/* ===================== ROOM 4: WISHES & GRAND CELEBRATION (Z: -58 to -86) ===================== */}
-      {/* Grand Cathedral Pavilion */}
       <mesh position={[0, 0, -72]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow material={materials.warmOakFloor}>
         <planeGeometry args={[24, 28]} />
       </mesh>
@@ -963,7 +947,6 @@ function LuxuryVillaStepByStepArchitecture({
 
       {/* LEFT WING: Friend Wishes Desk & Milestone Letter at (-7, 0, -72) */}
       <group position={[-7, 0, -72]}>
-        {/* Solid Walnut Desk */}
         <mesh position={[0, 0.74, 0]} castShadow receiveShadow>
           <boxGeometry args={[2.4, 0.08, 1.1]} />
           <meshStandardMaterial color="#402c1f" roughness={0.4} />
@@ -974,7 +957,6 @@ function LuxuryVillaStepByStepArchitecture({
             <meshStandardMaterial color="#332319" roughness={0.5} />
           </mesh>
         ))}
-        {/* Glowing Golden Letter with Wax Seal */}
         <group position={[0, 0.8, 0]} rotation={[0, 0.1, 0]}>
           <mesh castShadow>
             <boxGeometry args={[0.48, 0.02, 0.36]} />
@@ -1021,7 +1003,6 @@ function LuxuryVillaStepByStepArchitecture({
           <cylinderGeometry args={[0.35, 0.35, 0.35, 36]} />
         </mesh>
 
-        {/* Candles with Flames (extinguished when blown) */}
         {[-0.12, 0, 0.12].map((xOffset, i) => (
           <group key={i} position={[xOffset, 2.3, 0]}>
             <mesh castShadow>
@@ -1041,7 +1022,6 @@ function LuxuryVillaStepByStepArchitecture({
           <pointLight position={[0, 2.8, 0]} intensity={45} distance={12} color="#ffe2aa" />
         )}
 
-        {/* Celebration Floating Glow Particles */}
         <Float speed={1.2} rotationIntensity={0.5} floatIntensity={0.8}>
           <group>
             {Array.from({ length: 24 }).map((_, idx) => (
@@ -1064,6 +1044,90 @@ function LuxuryVillaStepByStepArchitecture({
   );
 }
 
+// Mobile On-Screen Virtual Thumbstick
+function VirtualJoystick({ onChange }: { onChange: (vec: { x: number; y: number }) => void }) {
+  const [knobPos, setKnobPos] = useState({ x: 0, y: 0 });
+  const touchIdRef = useRef<number | null>(null);
+  const baseCenterRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const baseRef = useRef<HTMLDivElement>(null);
+  const maxRadius = 38;
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    if (touchIdRef.current !== null) return;
+    const touch = e.changedTouches[0];
+    touchIdRef.current = touch.identifier;
+    if (baseRef.current) {
+      const rect = baseRef.current.getBoundingClientRect();
+      baseCenterRef.current = {
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2
+      };
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      const touch = e.changedTouches[i];
+      if (touch.identifier === touchIdRef.current) {
+        const dx = touch.clientX - baseCenterRef.current.x;
+        const dy = touch.clientY - baseCenterRef.current.y;
+        const dist = Math.hypot(dx, dy);
+        const clampedDist = Math.min(dist, maxRadius);
+        const angle = Math.atan2(dy, dx);
+
+        const clampedX = Math.cos(angle) * clampedDist;
+        const clampedY = Math.sin(angle) * clampedDist;
+
+        setKnobPos({ x: clampedX, y: clampedY });
+        onChange({
+          x: clampedX / maxRadius,
+          y: clampedY / maxRadius
+        });
+        break;
+      }
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      if (e.changedTouches[i].identifier === touchIdRef.current) {
+        touchIdRef.current = null;
+        setKnobPos({ x: 0, y: 0 });
+        onChange({ x: 0, y: 0 });
+        break;
+      }
+    }
+  };
+
+  return (
+    <div
+      ref={baseRef}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
+      className="relative w-28 h-28 rounded-full bg-black/50 border-2 border-[#c5a059]/50 backdrop-blur-md flex items-center justify-center touch-none select-none shadow-2xl pointer-events-auto"
+    >
+      <div className="absolute top-1.5 text-[9px] text-[#c5a059] font-mono opacity-80">▲</div>
+      <div className="absolute bottom-1.5 text-[9px] text-[#c5a059] font-mono opacity-80">▼</div>
+      <div className="absolute left-1.5 text-[9px] text-[#c5a059] font-mono opacity-80">◀</div>
+      <div className="absolute right-1.5 text-[9px] text-[#c5a059] font-mono opacity-80">▶</div>
+
+      <div
+        style={{
+          transform: `translate(${knobPos.x}px, ${knobPos.y}px)`
+        }}
+        className="w-12 h-12 rounded-full bg-gradient-to-tr from-amber-500 to-[#c5a059] border-2 border-white shadow-lg pointer-events-none transition-transform duration-75 flex items-center justify-center"
+      >
+        <Move className="w-4 h-4 text-black opacity-60" />
+      </div>
+    </div>
+  );
+}
+
 export function MuseumWalkthrough3D({
   config,
   onInspectExhibit,
@@ -1075,6 +1139,7 @@ export function MuseumWalkthrough3D({
   onAddMedia
 }: MuseumWalkthrough3DProps) {
   const [isLocked, setIsLocked] = useState(false);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
   const [nearbyExhibit, setNearbyExhibit] = useState<Exhibit | null>(null);
   const [isNearCake, setIsNearCake] = useState(false);
   const [isNearWishes, setIsNearWishes] = useState(false);
@@ -1083,6 +1148,56 @@ export function MuseumWalkthrough3D({
   const [showCelebrationBanner, setShowCelebrationBanner] = useState(false);
   const [doors, setDoors] = useState({ door1: false, door2: false, door3: false });
   const [teleportTarget, setTeleportTarget] = useState<[number, number, number] | null>(null);
+
+  // Mobile virtual joystick & touch look state
+  const [joystickInput, setJoystickInput] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const touchLookDelta = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const lookTouchIdRef = useRef<number | null>(null);
+  const lastLookPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+
+  // Detect touch screens / smartphones on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0 || (window as any).matchMedia('(pointer: coarse)').matches;
+      setIsTouchDevice(hasTouch);
+    }
+  }, []);
+
+  // Handle Touch Drag Camera Look for Mobile Phones
+  const handleTouchStart = (e: React.TouchEvent) => {
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      const touch = e.changedTouches[i];
+      // If touch is on the right 60% of the screen, use for camera look
+      if (touch.clientX > window.innerWidth * 0.35 && lookTouchIdRef.current === null) {
+        lookTouchIdRef.current = touch.identifier;
+        lastLookPosRef.current = { x: touch.clientX, y: touch.clientY };
+        break;
+      }
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      const touch = e.changedTouches[i];
+      if (touch.identifier === lookTouchIdRef.current) {
+        const dx = touch.clientX - lastLookPosRef.current.x;
+        const dy = touch.clientY - lastLookPosRef.current.y;
+        touchLookDelta.current.x += dx;
+        touchLookDelta.current.y += dy;
+        lastLookPosRef.current = { x: touch.clientX, y: touch.clientY };
+        break;
+      }
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      if (e.changedTouches[i].identifier === lookTouchIdRef.current) {
+        lookTouchIdRef.current = null;
+        break;
+      }
+    }
+  };
 
   // Toggle Door state with sound
   const handleToggleDoor = (doorId: 1 | 2 | 3) => {
@@ -1101,25 +1216,21 @@ export function MuseumWalkthrough3D({
     config.galleries.forEach((gallery, gIdx) => {
       gallery.exhibits.forEach((exhibit, eIdx) => {
         if (gallery.id === 'gallery-memories' || gIdx === 0) {
-          // Room 1 (Z: 4 to -14)
           if (eIdx === 0) list.push({ exhibit, position: [-8.8, 2.2, -2], rotation: [0, Math.PI / 2, 0] });
           else if (eIdx === 1) list.push({ exhibit, position: [-8.8, 2.2, -9], rotation: [0, Math.PI / 2, 0] });
           else if (eIdx === 2) list.push({ exhibit, position: [8.8, 2.2, -2], rotation: [0, -Math.PI / 2, 0] });
           else list.push({ exhibit, position: [8.8, 2.2, -9], rotation: [0, -Math.PI / 2, 0] });
         } else if (gallery.id === 'gallery-funny' || gIdx === 1) {
-          // Room 2 (Z: -14 to -36)
           if (eIdx === 0) list.push({ exhibit, position: [-8.8, 2.2, -20], rotation: [0, Math.PI / 2, 0] });
           else if (eIdx === 1) list.push({ exhibit, position: [-8.8, 2.2, -30], rotation: [0, Math.PI / 2, 0] });
           else if (eIdx === 2) list.push({ exhibit, position: [8.8, 2.2, -20], rotation: [0, -Math.PI / 2, 0] });
           else list.push({ exhibit, position: [8.8, 2.2, -30], rotation: [0, -Math.PI / 2, 0] });
         } else if (gallery.id === 'gallery-embarrassing' || gIdx === 2) {
-          // Room 3 (Z: -36 to -58)
           if (eIdx === 0) list.push({ exhibit, position: [-8.8, 2.2, -42], rotation: [0, Math.PI / 2, 0] });
           else if (eIdx === 1) list.push({ exhibit, position: [-8.8, 2.2, -52], rotation: [0, Math.PI / 2, 0] });
           else if (eIdx === 2) list.push({ exhibit, position: [8.8, 2.2, -42], rotation: [0, -Math.PI / 2, 0] });
           else list.push({ exhibit, position: [8.8, 2.2, -52], rotation: [0, -Math.PI / 2, 0] });
         } else {
-          // Room 4 (Z: -58 to -86)
           if (eIdx === 0) list.push({ exhibit, position: [-11.8, 2.4, -72], rotation: [0, Math.PI / 2, 0] });
           else list.push({ exhibit, position: [11.8, 2.4, -72], rotation: [0, -Math.PI / 2, 0] });
         }
@@ -1129,7 +1240,6 @@ export function MuseumWalkthrough3D({
     return list;
   }, [config.galleries]);
 
-  // Track player's current room based on Z position
   const handlePlayerPositionChange = (pos: [number, number, number]) => {
     const z = pos[2];
     let room = 1;
@@ -1143,7 +1253,6 @@ export function MuseumWalkthrough3D({
     }
   };
 
-  // Jump to specific room and ensure preceding doors are unlocked
   const handleJumpToRoom = (targetRoom: number) => {
     if (targetRoom === 1) {
       setTeleportTarget([0, 1.65, 0]);
@@ -1207,7 +1316,13 @@ export function MuseumWalkthrough3D({
   }, [nearDoor, nearbyExhibit, isNearCake, isNearWishes, candlesBlown, onInspectExhibit, onOpenWishes]);
 
   return (
-    <div className="relative w-full h-screen bg-[#c8e2f2] select-none overflow-hidden">
+    <div
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
+      className="relative w-full h-screen bg-[#c8e2f2] select-none overflow-hidden touch-none"
+    >
       <Canvas
         shadows="percentage"
         onCreated={({ gl }) => {
@@ -1240,9 +1355,11 @@ export function MuseumWalkthrough3D({
           exhibitsWithPositions={exhibitsWithPositions}
           isTouring={isTouring}
           teleportTarget={teleportTarget}
+          joystickInput={joystickInput}
+          touchLookDelta={touchLookDelta}
         />
 
-        {!isTouring && (
+        {!isTouring && !isTouchDevice && (
           <PointerLockControls
             onLock={() => setIsLocked(true)}
             onUnlock={() => setIsLocked(false)}
@@ -1263,26 +1380,26 @@ export function MuseumWalkthrough3D({
       </Canvas>
 
       {/* ===================== STEP-BY-STEP ROOM PROGRESSION BAR ===================== */}
-      <div className="absolute top-16 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 rounded-full bg-black/60 border border-[#c5a059]/40 backdrop-blur-md shadow-2xl">
+      <div className="absolute top-16 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-full bg-black/60 border border-[#c5a059]/40 backdrop-blur-md shadow-2xl max-w-[95vw] overflow-x-auto">
         {[
           { num: 1, label: 'Memorable Moments', short: '1. Memories' },
           { num: 2, label: 'Funny Memories', short: '2. Funny' },
-          { num: 3, label: 'Embarrassing Images', short: '3. Classified' },
-          { num: 4, label: 'Wishes & Celebration 🎂', short: '4. Celebration 🎂' }
+          { num: 3, label: 'Embarrassing Images', short: '3. Fails' },
+          { num: 4, label: 'Wishes & Celebration 🎂', short: '4. Party 🎂' }
         ].map((rm) => {
           const isActive = currentRoomIndex === rm.num;
           return (
             <button
               key={rm.num}
               onClick={() => handleJumpToRoom(rm.num)}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono tracking-wider transition-all cursor-pointer ${
+              className={`flex items-center gap-1 px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
                 isActive
                   ? 'bg-gradient-to-r from-amber-500 to-[#c5a059] text-black font-bold shadow-md shadow-amber-500/30'
                   : 'text-stone-300 hover:text-white hover:bg-white/10'
               }`}
             >
-              <span className="hidden sm:inline">{rm.label}</span>
-              <span className="inline sm:hidden">{rm.short}</span>
+              <span className="hidden md:inline">{rm.label}</span>
+              <span className="inline md:hidden">{rm.short}</span>
             </button>
           );
         })}
@@ -1290,31 +1407,45 @@ export function MuseumWalkthrough3D({
 
       {/* Celebration Banner when candles are blown */}
       {showCelebrationBanner && (
-        <div className="absolute top-28 left-1/2 -translate-x-1/2 z-50 pointer-events-none animate-bounce">
-          <div className="px-8 py-3.5 rounded-full bg-gradient-to-r from-amber-500 via-rose-500 to-amber-500 text-white font-display font-bold text-base sm:text-lg uppercase tracking-widest shadow-2xl shadow-rose-500/40 border-2 border-white/80">
+        <div className="absolute top-28 left-1/2 -translate-x-1/2 z-50 pointer-events-none animate-bounce max-w-[90vw] text-center">
+          <div className="px-6 sm:px-8 py-3 rounded-full bg-gradient-to-r from-amber-500 via-rose-500 to-amber-500 text-white font-display font-bold text-sm sm:text-lg uppercase tracking-widest shadow-2xl shadow-rose-500/40 border-2 border-white/80">
             🎉 Happy Birthday {config.profile.name}! 🎂
           </div>
         </div>
       )}
 
-      {/* Crosshair Dot */}
-      {isLocked && !isTouring && (
+      {/* Desktop Crosshair Dot */}
+      {isLocked && !isTouring && !isTouchDevice && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-30">
           <div className="w-1.5 h-1.5 rounded-full bg-[#c5a059] shadow-[0_0_6px_#c5a059]" />
         </div>
       )}
 
+      {/* ===================== MOBILE VIRTUAL JOYSTICK ===================== */}
+      {isTouchDevice && !isTouring && (
+        <div className="absolute bottom-6 left-6 z-40">
+          <VirtualJoystick onChange={setJoystickInput} />
+        </div>
+      )}
+
+      {/* Mobile Right-hand Drag Hint */}
+      {isTouchDevice && !isTouring && (
+        <div className="absolute bottom-6 right-6 z-30 pointer-events-none opacity-60 flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider text-white bg-black/40 px-3 py-1.5 rounded-full backdrop-blur-sm border border-white/10">
+          <span>👆 Drag to Look</span>
+        </div>
+      )}
+
       {/* NEAR DOOR INTERACTION PROMPT */}
       {nearDoor && (
-        <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-40 pointer-events-auto">
+        <div className="absolute bottom-20 sm:bottom-16 left-1/2 -translate-x-1/2 z-40 pointer-events-auto max-w-[90vw]">
           <button
             onClick={() => handleToggleDoor(nearDoor.id)}
-            className="flex items-center gap-3 px-7 py-3 rounded-full bg-gradient-to-r from-amber-600 via-yellow-600 to-amber-600 text-white font-display font-bold text-sm tracking-wider shadow-2xl hover:scale-105 transition-all cursor-pointer animate-pulse border-2 border-white"
+            className="flex items-center gap-2.5 px-6 sm:px-7 py-3 rounded-full bg-gradient-to-r from-amber-600 via-yellow-600 to-amber-600 text-white font-display font-bold text-xs sm:text-sm tracking-wider shadow-2xl hover:scale-105 transition-all cursor-pointer animate-pulse border-2 border-white"
           >
-            <span className="w-7 h-7 rounded-full bg-white text-amber-800 font-mono font-black text-xs flex items-center justify-center">
-              E
+            <span className="w-6 h-6 rounded-full bg-white text-amber-800 font-mono font-black text-xs flex items-center justify-center">
+              {isTouchDevice ? '👆' : 'E'}
             </span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               {nearDoor.isOpen ? <DoorOpen className="w-4 h-4" /> : <DoorClosed className="w-4 h-4" />}
               <span>{nearDoor.isOpen ? `Close Door` : `Open Door: ${nearDoor.title}`}</span>
             </div>
@@ -1324,13 +1455,13 @@ export function MuseumWalkthrough3D({
 
       {/* Near Cake Celebration Interaction Prompt */}
       {isNearCake && !nearDoor && !candlesBlown && (
-        <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-40 pointer-events-auto">
+        <div className="absolute bottom-20 sm:bottom-16 left-1/2 -translate-x-1/2 z-40 pointer-events-auto max-w-[90vw]">
           <button
             onClick={handleCelebrateAndBlowCandles}
-            className="flex items-center gap-3 px-8 py-3.5 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 text-white font-display font-bold text-sm tracking-wider shadow-2xl hover:scale-105 transition-all cursor-pointer animate-pulse border-2 border-white"
+            className="flex items-center gap-2.5 px-6 sm:px-8 py-3 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 text-white font-display font-bold text-xs sm:text-sm tracking-wider shadow-2xl hover:scale-105 transition-all cursor-pointer animate-pulse border-2 border-white"
           >
-            <span className="w-7 h-7 rounded-full bg-white text-rose-600 font-mono font-black text-xs flex items-center justify-center">
-              E
+            <span className="w-6 h-6 rounded-full bg-white text-rose-600 font-mono font-black text-xs flex items-center justify-center">
+              {isTouchDevice ? '👆' : 'E'}
             </span>
             <span>Make a Wish &amp; Blow Out Candles! 🎂</span>
           </button>
@@ -1339,13 +1470,13 @@ export function MuseumWalkthrough3D({
 
       {/* Near Friend Wishes Desk Interaction Prompt */}
       {isNearWishes && !nearDoor && !isNearCake && !nearbyExhibit && (
-        <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-40 pointer-events-auto">
+        <div className="absolute bottom-20 sm:bottom-16 left-1/2 -translate-x-1/2 z-40 pointer-events-auto max-w-[90vw]">
           <button
             onClick={() => onOpenWishes?.()}
-            className="flex items-center gap-3 px-7 py-3.5 rounded-full bg-gradient-to-r from-amber-500 via-yellow-600 to-amber-600 text-white font-display font-bold text-sm tracking-wider shadow-2xl hover:scale-105 transition-all cursor-pointer animate-pulse border-2 border-white"
+            className="flex items-center gap-2.5 px-6 sm:px-7 py-3 rounded-full bg-gradient-to-r from-amber-500 via-yellow-600 to-amber-600 text-white font-display font-bold text-xs sm:text-sm tracking-wider shadow-2xl hover:scale-105 transition-all cursor-pointer animate-pulse border-2 border-white"
           >
-            <span className="w-7 h-7 rounded-full bg-white text-amber-700 font-mono font-black text-xs flex items-center justify-center">
-              E
+            <span className="w-6 h-6 rounded-full bg-white text-amber-700 font-mono font-black text-xs flex items-center justify-center">
+              {isTouchDevice ? '👆' : 'E'}
             </span>
             <span>Open Friend Wishes &amp; Guestbook 💌</span>
           </button>
@@ -1354,21 +1485,21 @@ export function MuseumWalkthrough3D({
 
       {/* Prompt [E] Inspect Artwork (Photo or Video) */}
       {nearbyExhibit && !nearDoor && !isNearCake && !isNearWishes && (
-        <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-40 pointer-events-auto">
+        <div className="absolute bottom-20 sm:bottom-16 left-1/2 -translate-x-1/2 z-40 pointer-events-auto max-w-[90vw]">
           <button
             onClick={() => onInspectExhibit(nearbyExhibit)}
-            className="flex items-center gap-3 px-6 py-2.5 rounded-full bg-white/95 border border-[#c5a059] text-[#1a1918] shadow-2xl backdrop-blur-md hover:scale-105 transition-all cursor-pointer animate-pulse"
+            className="flex items-center gap-2.5 px-5 sm:px-6 py-2.5 rounded-full bg-white/95 border border-[#c5a059] text-[#1a1918] shadow-2xl backdrop-blur-md hover:scale-105 transition-all cursor-pointer animate-pulse"
           >
-            <span className="w-6 h-6 rounded bg-[#c5a059] text-black font-mono font-bold text-xs flex items-center justify-center">
-              E
+            <span className="w-5 h-5 sm:w-6 sm:h-6 rounded bg-[#c5a059] text-black font-mono font-bold text-xs flex items-center justify-center">
+              {isTouchDevice ? '👆' : 'E'}
             </span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               {nearbyExhibit.mediaType === 'video' || nearbyExhibit.videoUrl ? (
                 <Video className="w-3.5 h-3.5 text-rose-500" />
               ) : (
                 <ImageIcon className="w-3.5 h-3.5 text-amber-600" />
               )}
-              <span className="text-xs font-display font-bold text-stone-900">
+              <span className="text-xs font-display font-bold text-stone-900 truncate max-w-[200px] sm:max-w-none">
                 {nearbyExhibit.mediaType === 'video' || nearbyExhibit.videoUrl ? 'Watch Video: ' : 'View Photo: '}
                 {nearbyExhibit.title}
               </span>
@@ -1377,8 +1508,8 @@ export function MuseumWalkthrough3D({
         </div>
       )}
 
-      {/* Bottom Walking & Looking Hint */}
-      {!isLocked && !isTouring && (
+      {/* Desktop Hint */}
+      {!isLocked && !isTouring && !isTouchDevice && (
         <div
           onClick={() => {
             const canvas = document.querySelector('canvas');
