@@ -12,7 +12,7 @@ import { ScavengerHuntHUD } from '@/components/arcade/ScavengerHuntHUD';
 import { MuseumConfig, Exhibit, MysteryBoxItem, HiddenMemoryItem } from '@/types/museum';
 import { getMuseumConfig, saveMuseumConfig } from '@/lib/museumStore';
 import Link from 'next/link';
-import { Landmark, Mail, PlusCircle, Compass, Gamepad2, Sparkles, CheckCircle2, Film } from 'lucide-react';
+import { Landmark, Mail, PlusCircle, Compass, Gamepad2, Sparkles, CheckCircle2, Film, Menu, X } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 // Dynamically import 3D Museum Walkthrough
@@ -37,6 +37,7 @@ export default function MuseumPage() {
   const [isTouring, setIsTouring] = useState(false);
   const [showWishesModal, setShowWishesModal] = useState(false);
   const [showAddMediaModal, setShowAddMediaModal] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
   const [currentRoomIndex, setCurrentRoomIndex] = useState(1);
 
   // Museum Mischief Arcade States
@@ -120,69 +121,79 @@ export default function MuseumPage() {
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-[#181614] text-[#1a1a1e] select-none">
-      {/* Top Brand, Audio Atmosphere & Navigation Bar */}
-      <div className="absolute top-4 left-4 right-4 z-40 flex items-center justify-between pointer-events-none gap-2">
-        {/* Left: Celebratory Birthday Name Badge */}
-        <div className="flex items-center gap-2 pointer-events-auto">
-          <Link
-            href="/"
-            className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/65 border border-[#d4af37]/50 text-[#f5f0e6] hover:bg-black/85 transition-all text-xs font-serif backdrop-blur-md shadow-lg"
-          >
-            <span className="text-base animate-bounce">🎂</span>
-            <span className="font-bold">Happy Birthday, <span className="text-[#ffd700]">{config.profile.name}</span>!</span>
-          </Link>
-        </div>
+      {/* Ultra-Clean Corner Controls (Zero screen clutter) */}
+      <div className="absolute top-4 right-4 z-40 flex items-center gap-2 pointer-events-auto">
+        {/* Background Birthday Soundtrack */}
+        <AudioController customAudioUrl={config.settings?.customAudioUrl} />
 
-        {/* Right: Clean, essential actions without visual clutter */}
-        <div className="flex items-center gap-2 pointer-events-auto">
-          {/* Watch Birthday Movie / Story Reel */}
-          <button
-            onClick={() => setIsTouring(!isTouring)}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border text-xs font-bold backdrop-blur-md transition-all active:scale-95 cursor-pointer shadow-md ${
-              isTouring
-                ? 'bg-amber-500 text-neutral-950 border-white shadow-amber-500/50 animate-pulse'
-                : 'bg-amber-500/20 hover:bg-amber-500/35 border-amber-400/50 text-amber-200'
-            }`}
-          >
-            <Film className="w-3.5 h-3.5" />
-            <span>{isTouring ? 'Exit Movie 🎬' : 'Watch Movie 🎬'}</span>
-          </button>
-
-          {/* Birthday Wishes & Cards */}
-          <button
-            onClick={() => setShowWishesModal(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-500/20 hover:bg-rose-500/35 border border-rose-400/50 text-rose-200 text-xs font-medium backdrop-blur-md transition-all active:scale-95 cursor-pointer shadow-md"
-          >
-            <Mail className="w-3.5 h-3.5 text-rose-300" />
-            <span className="hidden sm:inline">Birthday</span> Wishes 💌
-          </button>
-
-          {/* Mini-Games & Surprises */}
-          <button
-            onClick={() => {
-              setArcadeDefaultTab('caption');
-              setShowArcadeModal(true);
-            }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-500/20 hover:bg-purple-500/35 border border-purple-400/50 text-purple-200 text-xs font-medium backdrop-blur-md transition-all active:scale-95 cursor-pointer shadow-md"
-          >
-            <Gamepad2 className="w-3.5 h-3.5 text-purple-300" />
-            <span>Games 🕹️</span>
-          </button>
-
-          {/* Picture Adder Person / Creator Dashboard link */}
-          <Link
-            href="/create"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/15 hover:bg-amber-500/30 border border-amber-400/40 text-amber-200 text-xs font-medium backdrop-blur-md transition-all active:scale-95 cursor-pointer shadow-md"
-            title="Open Picture Adder / Creator Dashboard"
-          >
-            <PlusCircle className="w-3.5 h-3.5 text-amber-300" />
-            <span className="hidden md:inline">Creator</span> Studio 🎨
-          </Link>
-
-          {/* Background Birthday Soundtrack */}
-          <AudioController customAudioUrl={config.settings?.customAudioUrl} />
-        </div>
+        {/* Minimalist Menu Toggle (keeps screen 100% clean) */}
+        <button
+          onClick={() => setShowMenu(!showMenu)}
+          className="p-2 sm:px-3 sm:py-1.5 rounded-full bg-black/60 hover:bg-black/85 border border-white/20 text-white backdrop-blur-md transition-all active:scale-95 cursor-pointer shadow-lg flex items-center gap-1.5 text-xs font-medium"
+          title="Open Menu"
+        >
+          {showMenu ? <X className="w-4 h-4 text-amber-400" /> : <Menu className="w-4 h-4 text-amber-400" />}
+          <span className="hidden sm:inline">{showMenu ? 'Close' : 'Menu'}</span>
+        </button>
       </div>
+
+      {/* Slide-out / Dropdown Menu (only visible when user clicks ☰) */}
+      {showMenu && (
+        <div className="absolute top-16 right-4 z-40 w-64 p-3 rounded-2xl bg-neutral-950/95 border border-[#d4af37]/40 shadow-2xl backdrop-blur-xl pointer-events-auto">
+          <div className="px-3 py-2 border-b border-white/10 mb-2">
+            <p className="text-xs font-serif font-bold text-[#ffd700]">Happy Birthday, {config.profile.name}! 🎂</p>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            {/* Watch Birthday Movie */}
+            <button
+              onClick={() => {
+                setIsTouring(!isTouring);
+                setShowMenu(false);
+              }}
+              className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-xs font-medium text-white transition-all text-left cursor-pointer"
+            >
+              <Film className="w-4 h-4 text-amber-400" />
+              <span>{isTouring ? 'Exit Movie Tour' : 'Watch Birthday Movie 🎬'}</span>
+            </button>
+
+            {/* Birthday Wishes */}
+            <button
+              onClick={() => {
+                setShowWishesModal(true);
+                setShowMenu(false);
+              }}
+              className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-xs font-medium text-white transition-all text-left cursor-pointer"
+            >
+              <Mail className="w-4 h-4 text-rose-400" />
+              <span>Birthday Wishes 💌</span>
+            </button>
+
+            {/* Mini-Games */}
+            <button
+              onClick={() => {
+                setArcadeDefaultTab('caption');
+                setShowArcadeModal(true);
+                setShowMenu(false);
+              }}
+              className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-xs font-medium text-white transition-all text-left cursor-pointer"
+            >
+              <Gamepad2 className="w-4 h-4 text-purple-400" />
+              <span>Mischief Arcade Games 🕹️</span>
+            </button>
+
+            {/* Picture Adder Person / Creator Studio */}
+            <Link
+              href="/create"
+              onClick={() => setShowMenu(false)}
+              className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/10 text-xs font-medium text-amber-300 transition-all border-t border-white/10 pt-2 mt-1"
+            >
+              <PlusCircle className="w-4 h-4 text-[#ffd700]" />
+              <span>Creator Studio (Add Photos) 🎨</span>
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Discovered Memory Toast Notification */}
       {discoveredMemoryToast && (
