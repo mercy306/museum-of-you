@@ -6,7 +6,20 @@ import { PointerLockControls, Float } from '@react-three/drei';
 import * as THREE from 'three';
 import confetti from 'canvas-confetti';
 import { MuseumConfig, Exhibit } from '@/types/museum';
-import { Sparkles, Music, Video, Image as ImageIcon, DoorOpen, DoorClosed, PartyPopper, Compass, Move } from 'lucide-react';
+import {
+  Sparkles,
+  Music,
+  Video,
+  Image as ImageIcon,
+  DoorOpen,
+  DoorClosed,
+  PartyPopper,
+  Compass,
+  Move,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw
+} from 'lucide-react';
 
 // Suppress Three.js r187 deprecation notices triggered by R3F internal bindings
 if (typeof window !== 'undefined') {
@@ -111,7 +124,7 @@ function isValidPosition(
   return false;
 }
 
-// First-person WASD & Touch Mobile Player Controller
+// First-person WASD & Touch Mobile Player Controller with Smooth FOV Zoom
 function PlayerController({
   onNearExhibitChange,
   onNearCakeChange,
@@ -123,7 +136,8 @@ function PlayerController({
   isTouring,
   teleportTarget,
   joystickInput,
-  touchLookDelta
+  touchLookDelta,
+  targetFov
 }: {
   onNearExhibitChange: (exhibit: Exhibit | null) => void;
   onNearCakeChange: (nearCake: boolean) => void;
@@ -136,6 +150,7 @@ function PlayerController({
   teleportTarget: [number, number, number] | null;
   joystickInput: { x: number; y: number };
   touchLookDelta: React.MutableRefObject<{ x: number; y: number }>;
+  targetFov: number;
 }) {
   const { camera } = useThree();
   const keys = useRef<{ [key: string]: boolean }>({});
@@ -194,6 +209,13 @@ function PlayerController({
   }, [teleportTarget, camera]);
 
   useFrame((_, delta) => {
+    // Smooth Camera Zoom In / Out Damping
+    const pCamera = camera as THREE.PerspectiveCamera;
+    if (pCamera.isPerspectiveCamera && Math.abs(pCamera.fov - targetFov) > 0.05) {
+      pCamera.fov = THREE.MathUtils.damp(pCamera.fov, targetFov, 9, delta);
+      pCamera.updateProjectionMatrix();
+    }
+
     // Touch Drag Camera Look for Mobile Phones
     if (touchLookDelta.current.x !== 0 || touchLookDelta.current.y !== 0) {
       euler.current.y -= touchLookDelta.current.x * 0.0035;
@@ -1149,6 +1171,11 @@ export function MuseumWalkthrough3D({
   const [doors, setDoors] = useState({ door1: false, door2: false, door3: false });
   const [teleportTarget, setTeleportTarget] = useState<[number, number, number] | null>(null);
 
+  // Mobile Camera Zoom In / Out State (FOV: 25 max zoom in, 64 default, 85 wide zoom out)
+  const [targetFov, setTargetFov] = useState(64);
+  const pinchStartDistRef = useRef<number | null>(null);
+  const pinchStartFovRef = useRef<number>(64);
+
   // Mobile virtual joystick & touch look state
   const [joystickInput, setJoystickInput] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const touchLookDelta = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -1163,11 +1190,34 @@ export function MuseumWalkthrough3D({
     }
   }, []);
 
-  // Handle Touch Drag Camera Look for Mobile Phones
+  // Zoom In, Zoom Out, and Reset Handlers
+  const handleZoomIn = () => {
+    setTargetFov((prev) => Math.max(25, prev - 12));
+  };
+
+  const handleZoomOut = () => {
+    setTargetFov((prev) => Math.min(85, prev + 12));
+  };
+
+  const handleResetZoom = () => {
+    setTargetFov(64);
+  };
+
+  // Two-Finger Pinch-to-Zoom AND Single-Finger Drag-to-Look on Mobile Phones
   const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      // Two-finger pinch gesture started!
+      const t1 = e.touches[0];
+      const t2 = e.touches[1];
+      pinchStartDistRef.current = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+      pinchStartFovRef.current = targetFov;
+      lookTouchIdRef.current = null;
+      return;
+    }
+
+    // Single-finger touch for camera rotation
     for (let i = 0; i < e.changedTouches.length; i++) {
       const touch = e.changedTouches[i];
-      // If touch is on the right 60% of the screen, use for camera look
       if (touch.clientX > window.innerWidth * 0.35 && lookTouchIdRef.current === null) {
         lookTouchIdRef.current = touch.identifier;
         lastLookPosRef.current = { x: touch.clientX, y: touch.clientY };
@@ -1177,6 +1227,20 @@ export function MuseumWalkthrough3D({
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
+    // Check for Two-Finger Pinch-to-Zoom
+    if (e.touches.length === 2 && pinchStartDistRef.current !== null) {
+      const t1 = e.touches[0];
+      const t2 = e.touches[1];
+      const currentDist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+      const ratio = currentDist / pinchStartDistRef.current;
+      // Spreading fingers apart (ratio > 1) -> decrease FOV (zoom in)
+      // Pinching fingers closer (ratio < 1) -> increase FOV (zoom out)
+      const calculatedFov = THREE.MathUtils.clamp(pinchStartFovRef.current / ratio, 25, 88);
+      setTargetFov(calculatedFov);
+      return;
+    }
+
+    // Single-finger touch camera look
     for (let i = 0; i < e.changedTouches.length; i++) {
       const touch = e.changedTouches[i];
       if (touch.identifier === lookTouchIdRef.current) {
@@ -1191,11 +1255,24 @@ export function MuseumWalkthrough3D({
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
+    if (e.touches.length < 2) {
+      pinchStartDistRef.current = null;
+    }
     for (let i = 0; i < e.changedTouches.length; i++) {
       if (e.changedTouches[i].identifier === lookTouchIdRef.current) {
         lookTouchIdRef.current = null;
         break;
       }
+    }
+  };
+
+  // Desktop Mouse Wheel Zoom Support
+  const handleWheel = (e: React.WheelEvent) => {
+    if (isTouring) return;
+    if (e.deltaY < 0) {
+      setTargetFov((prev) => Math.max(25, prev - 5));
+    } else if (e.deltaY > 0) {
+      setTargetFov((prev) => Math.min(85, prev + 5));
     }
   };
 
@@ -1315,12 +1392,19 @@ export function MuseumWalkthrough3D({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [nearDoor, nearbyExhibit, isNearCake, isNearWishes, candlesBlown, onInspectExhibit, onOpenWishes]);
 
+  // Current Zoom factor label e.g. "1.0x", "1.5x", "2.0x"
+  const currentZoomFactor = useMemo(() => {
+    const factor = Math.round((64 / targetFov) * 10) / 10;
+    return `${factor}x`;
+  }, [targetFov]);
+
   return (
     <div
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       onTouchCancel={handleTouchEnd}
+      onWheel={handleWheel}
       className="relative w-full h-screen bg-[#c8e2f2] select-none overflow-hidden touch-none"
     >
       <Canvas
@@ -1357,6 +1441,7 @@ export function MuseumWalkthrough3D({
           teleportTarget={teleportTarget}
           joystickInput={joystickInput}
           touchLookDelta={touchLookDelta}
+          targetFov={targetFov}
         />
 
         {!isTouring && !isTouchDevice && (
@@ -1405,6 +1490,38 @@ export function MuseumWalkthrough3D({
         })}
       </div>
 
+      {/* ===================== MOBILE & DESKTOP ZOOM IN / ZOOM OUT CONTROLS ===================== */}
+      <div className="absolute top-28 right-4 sm:right-6 z-40 flex flex-col items-center gap-1.5 p-1.5 rounded-2xl bg-black/55 border border-[#c5a059]/40 backdrop-blur-md shadow-2xl pointer-events-auto">
+        {/* Zoom In Button */}
+        <button
+          onClick={handleZoomIn}
+          title="Zoom In"
+          aria-label="Zoom In"
+          className="p-2 sm:p-2.5 rounded-xl bg-white/10 hover:bg-[#c5a059] text-[#c5a059] hover:text-black transition-all active:scale-95 cursor-pointer shadow-sm"
+        >
+          <ZoomIn className="w-4 h-4 sm:w-5 sm:h-5" />
+        </button>
+
+        {/* Current Zoom Indicator & Reset */}
+        <button
+          onClick={handleResetZoom}
+          title="Reset Zoom"
+          className="px-1.5 py-1 rounded-lg bg-black/40 hover:bg-white/20 text-[10px] sm:text-[11px] font-mono font-bold text-[#dfb76c] transition-all cursor-pointer text-center"
+        >
+          {currentZoomFactor}
+        </button>
+
+        {/* Zoom Out Button */}
+        <button
+          onClick={handleZoomOut}
+          title="Zoom Out"
+          aria-label="Zoom Out"
+          className="p-2 sm:p-2.5 rounded-xl bg-white/10 hover:bg-[#c5a059] text-[#c5a059] hover:text-black transition-all active:scale-95 cursor-pointer shadow-sm"
+        >
+          <ZoomOut className="w-4 h-4 sm:w-5 sm:h-5" />
+        </button>
+      </div>
+
       {/* Celebration Banner when candles are blown */}
       {showCelebrationBanner && (
         <div className="absolute top-28 left-1/2 -translate-x-1/2 z-50 pointer-events-none animate-bounce max-w-[90vw] text-center">
@@ -1428,10 +1545,15 @@ export function MuseumWalkthrough3D({
         </div>
       )}
 
-      {/* Mobile Right-hand Drag Hint */}
+      {/* Mobile Pinch / Drag Gestures Hint */}
       {isTouchDevice && !isTouring && (
-        <div className="absolute bottom-6 right-6 z-30 pointer-events-none opacity-60 flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider text-white bg-black/40 px-3 py-1.5 rounded-full backdrop-blur-sm border border-white/10">
-          <span>👆 Drag to Look</span>
+        <div className="absolute bottom-6 right-6 z-30 pointer-events-none opacity-70 flex flex-col items-end gap-1 text-[10px] font-mono uppercase tracking-wider text-white">
+          <div className="bg-black/40 px-3 py-1.5 rounded-full backdrop-blur-sm border border-white/10">
+            <span>🤏 Pinch to Zoom</span>
+          </div>
+          <div className="bg-black/40 px-3 py-1.5 rounded-full backdrop-blur-sm border border-white/10">
+            <span>👆 Drag to Look</span>
+          </div>
         </div>
       )}
 
@@ -1518,7 +1640,7 @@ export function MuseumWalkthrough3D({
           className="absolute inset-0 z-20 cursor-pointer flex items-end justify-center pb-6"
         >
           <div className="px-5 py-2 rounded-full bg-black/70 border border-[#c5a059]/40 text-[#c5a059] text-xs uppercase tracking-widest font-mono backdrop-blur-sm pointer-events-none shadow-md animate-pulse">
-            Click Screen to Look Around · WASD to Walk · [E] Interact
+            Click Screen to Look Around · WASD to Walk · Mouse Wheel to Zoom · [E] Interact
           </div>
         </div>
       )}
