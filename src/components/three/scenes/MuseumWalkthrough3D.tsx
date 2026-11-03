@@ -385,8 +385,8 @@ function PlayerController({
         targetPos.y = 1.95 + Math.sin(tOrbit * 2) * 0.12;
       }
 
-      camera.position.lerp(targetPos, Math.min(1, delta * 2.6));
-      currentLookAt.current.lerp(targetLook, Math.min(1, delta * 3.2));
+      camera.position.lerp(targetPos, Math.min(1, delta * 3.8));
+      currentLookAt.current.lerp(targetLook, Math.min(1, delta * 4.2));
       camera.lookAt(currentLookAt.current);
       euler.current.setFromQuaternion(camera.quaternion);
 
@@ -1707,7 +1707,7 @@ export function MuseumWalkthrough3D({
       type: 'intro',
       cameraPos: [0, 1.85, 3.2],
       lookAt: [0, 1.8, -4],
-      duration: 4.5,
+      duration: 2.5,
       roomNumber: 1,
       roomTitle: 'Entrance Portico',
       badge: '✨ WELCOME TO YOUR STORY',
@@ -1724,7 +1724,7 @@ export function MuseumWalkthrough3D({
         type: 'exhibit',
         cameraPos: [isLeft ? -5.2 : 5.2, 2.1, item.position[2]],
         lookAt: [item.position[0], 2.1, item.position[2]],
-        duration: 5.5,
+        duration: 3.0,
         roomNumber: 1,
         roomTitle: 'Room 1 · Memorable Moments',
         badge: '📸 CHERISHED MEMORY',
@@ -1740,7 +1740,7 @@ export function MuseumWalkthrough3D({
       type: 'door_transit',
       cameraPos: [0, 1.75, -16.5],
       lookAt: [0, 1.75, -24],
-      duration: 3.5,
+      duration: 2.0,
       roomNumber: 2,
       roomTitle: 'Room 2 · Funny Memories',
       badge: '🚪 UNLOCKING NEXT CHAPTER',
@@ -1758,7 +1758,7 @@ export function MuseumWalkthrough3D({
         type: 'exhibit',
         cameraPos: [isLeft ? -5.2 : 5.2, 2.1, item.position[2]],
         lookAt: [item.position[0], 2.1, item.position[2]],
-        duration: 5.5,
+        duration: 3.0,
         roomNumber: 2,
         roomTitle: 'Room 2 · Funny Memories',
         badge: '😂 COMEDY GOLD',
@@ -1774,7 +1774,7 @@ export function MuseumWalkthrough3D({
       type: 'door_transit',
       cameraPos: [0, 1.75, -38.5],
       lookAt: [0, 1.75, -46],
-      duration: 3.5,
+      duration: 2.0,
       roomNumber: 3,
       roomTitle: 'Room 3 · Embarrassing Images',
       badge: '🙈 VAULT OF EMBARRASSMENT',
@@ -1792,7 +1792,7 @@ export function MuseumWalkthrough3D({
         type: 'exhibit',
         cameraPos: [isLeft ? -5.2 : 5.2, 2.1, item.position[2]],
         lookAt: [item.position[0], 2.1, item.position[2]],
-        duration: 5.5,
+        duration: 3.0,
         roomNumber: 3,
         roomTitle: 'Room 3 · Embarrassing Images',
         badge: '🙈 NO REGRETS',
@@ -1808,7 +1808,7 @@ export function MuseumWalkthrough3D({
       type: 'door_transit',
       cameraPos: [0, 1.75, -61.0],
       lookAt: [0, 1.75, -72],
-      duration: 4.0,
+      duration: 2.0,
       roomNumber: 4,
       roomTitle: 'Room 4 · Grand Celebration Hall',
       badge: '🎂 THE BIRTHDAY FINALE',
@@ -1823,7 +1823,7 @@ export function MuseumWalkthrough3D({
       type: 'cake_finale',
       cameraPos: [0, 1.9, -67.5],
       lookAt: [0, 1.5, -72],
-      duration: 16.0,
+      duration: 8.0,
       roomNumber: 4,
       roomTitle: 'Room 4 · Grand Celebration Hall',
       badge: '🎉 HAPPY BIRTHDAY!',
