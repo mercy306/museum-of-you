@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import confetti from 'canvas-confetti';
 import { MuseumConfig, Exhibit, ArcadeManifest, MysteryBoxItem, HiddenMemoryItem } from '@/types/museum';
 import { ArcadeCabinet3D, MysteryGiftBox3D, HiddenMemoryToken3D } from './Arcade3DElements';
+import { CinematicRoom1Environment } from '../cinematic/CinematicRoom1Environment';
 import {
   Sparkles,
   Music,
@@ -103,14 +104,37 @@ function playDoorSound(open: boolean) {
   }
 }
 
+// Synthesize pleasant discovery chime on memory pickup or artwork approach
+function playDiscoverySound() {
+  if (typeof window === 'undefined') return;
+  try {
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const now = ctx.currentTime;
+    [587.33, 880, 1174.66].forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+      gain.gain.setValueAtTime(0.08, now + idx * 0.08);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.08 + 0.6);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now + idx * 0.08);
+      osc.stop(now + idx * 0.08 + 0.6);
+    });
+  } catch {}
+}
+
 // 4-Room Physical Walkable Boundary Physics with Real Closed Door Collisions
 function isValidPosition(
   x: number,
   z: number,
   doors: { door1: boolean; door2: boolean; door3: boolean }
 ): boolean {
-  // Room 1: Memorable Moments (Z: [3.5, -13.5], X: [-8.5, 8.5])
-  if (x >= -8.5 && x <= 8.5 && z >= -13.5 && z <= 3.5) return true;
+  // Room 1: Memorable Moments & Portico Arrival Terrace (Z: [11.5, -13.5], X: [-8.5, 8.5])
+  if (x >= -8.5 && x <= 8.5 && z >= -13.5 && z <= 11.5) return true;
 
   // Doorway 1 Threshold (Z = -14) connecting Room 1 & Room 2
   if (doors.door1 && x >= -1.4 && x <= 1.4 && z >= -16.2 && z <= -13.4) return true;
@@ -148,6 +172,8 @@ function PlayerController({
   arcade,
   collectedMemoryIds = [],
   isTouring,
+  isIntroPlaying = false,
+  onIntroComplete,
   teleportTarget,
   joystickInput,
   touchLookDelta,
@@ -166,6 +192,8 @@ function PlayerController({
   arcade?: ArcadeManifest;
   collectedMemoryIds?: string[];
   isTouring: boolean;
+  isIntroPlaying?: boolean;
+  onIntroComplete?: () => void;
   teleportTarget: [number, number, number] | null;
   joystickInput: { x: number; y: number };
   touchLookDelta: React.MutableRefObject<{ x: number; y: number }>;
@@ -175,6 +203,7 @@ function PlayerController({
   const keys = useRef<{ [key: string]: boolean }>({});
   const velocity = useRef(new THREE.Vector3());
   const tourProgress = useRef(0);
+  const introProgress = useRef(0);
   const euler = useRef(new THREE.Euler(0, 0, 0, 'YXZ'));
 
   const tourWaypoints = useMemo(() => {
@@ -199,8 +228,13 @@ function PlayerController({
   }, []);
 
   useEffect(() => {
-    camera.position.set(0, 1.65, 2);
-    camera.lookAt(0, 1.65, -6);
+    if (isIntroPlaying) {
+      camera.position.set(0, 2.15, 10.5);
+      camera.lookAt(0, 1.65, -4.0);
+    } else {
+      camera.position.set(0, 1.65, 1.5);
+      camera.lookAt(0, 1.65, -6);
+    }
     euler.current.setFromQuaternion(camera.quaternion);
 
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -216,7 +250,7 @@ function PlayerController({
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [camera]);
+  }, [camera, isIntroPlaying]);
 
   // Handle fast-travel / teleporting when clicking room tabs
   useEffect(() => {
@@ -228,6 +262,28 @@ function PlayerController({
   }, [teleportTarget, camera]);
 
   useFrame((_, delta) => {
+    // Cinematic Arrival Intro Glide
+    if (isIntroPlaying) {
+      introProgress.current += delta * 0.26;
+      const t = Math.min(1, introProgress.current);
+      const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+      // Glide from Grand Portico [0, 2.15, 10.5] into Room 1 [0, 1.65, 1.2]
+      camera.position.set(
+        0,
+        THREE.MathUtils.lerp(2.15, 1.65, eased),
+        THREE.MathUtils.lerp(10.5, 1.2, eased)
+      );
+      camera.lookAt(0, 1.65, -4.0);
+      euler.current.setFromQuaternion(camera.quaternion);
+      onPlayerPositionChange([camera.position.x, camera.position.y, camera.position.z]);
+
+      if (t >= 1) {
+        onIntroComplete?.();
+      }
+      return;
+    }
+
     // Smooth Camera Zoom In / Out Damping
     const pCamera = camera as THREE.PerspectiveCamera;
     if (pCamera.isPerspectiveCamera && Math.abs(pCamera.fov - targetFov) > 0.05) {
@@ -603,20 +659,35 @@ function ArchitecturalPartitionWallWithDoor({
   );
 }
 
-// Framed Artwork in 3D: Supports BOTH Photo Frames AND High-Tech Video Displays
+// Framed Artwork in 3D: Supports BOTH Photo Frames AND High-Tech Video Displays with Cinematic Dynamic Highlight
 function FramedArtwork({
   exhibit,
   position,
   rotation,
-  onInspect
+  onInspect,
+  isNearby = false
 }: {
   exhibit: Exhibit;
   position: [number, number, number];
   rotation: [number, number, number];
   onInspect: (exhibit: Exhibit) => void;
+  isNearby?: boolean;
 }) {
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
+  const spotLightRef = useRef<THREE.SpotLight>(null);
   const isVideo = exhibit.mediaType === 'video' || Boolean(exhibit.videoUrl);
+
+  useFrame((_, delta) => {
+    if (spotLightRef.current) {
+      const targetIntensity = isNearby ? (isVideo ? 34 : 44) : (isVideo ? 16 : 24);
+      spotLightRef.current.intensity = THREE.MathUtils.damp(
+        spotLightRef.current.intensity,
+        targetIntensity,
+        6,
+        delta
+      );
+    }
+  });
 
   useEffect(() => {
     const loader = new THREE.TextureLoader();
@@ -665,8 +736,10 @@ function FramedArtwork({
         <boxGeometry args={[frameWidth + 0.04, frameHeight + 0.04, 0.02]} />
         <meshStandardMaterial
           color={isVideo ? '#2a2b2f' : '#c5a059'}
-          metalness={isVideo ? 0.9 : 0.8}
-          roughness={isVideo ? 0.2 : 0.3}
+          metalness={isVideo ? 0.9 : 0.85}
+          roughness={isVideo ? 0.2 : 0.25}
+          emissive={isNearby ? (isVideo ? '#2563eb' : '#d4af37') : '#000000'}
+          emissiveIntensity={isNearby ? 0.35 : 0}
         />
       </mesh>
 
@@ -698,20 +771,30 @@ function FramedArtwork({
       )}
 
       <spotLight
+        ref={spotLightRef}
         position={[0, 2.5, 1.6]}
         target-position={[0, 0, 0]}
-        intensity={isVideo ? 18 : 26}
-        distance={6}
-        angle={0.5}
-        penumbra={0.7}
-        color={isVideo ? '#e0f0ff' : '#fff3db'}
+        intensity={isVideo ? 16 : 24}
+        distance={6.5}
+        angle={0.55}
+        penumbra={0.75}
+        color={isVideo ? '#e0f0ff' : '#fff4df'}
       />
 
       <group position={[0, -frameHeight / 2 - 0.22, 0.03]}>
         <mesh>
           <boxGeometry args={[Math.min(frameWidth, 1.8), 0.18, 0.02]} />
-          <meshStandardMaterial color="#c5a059" metalness={0.8} roughness={0.3} />
+          <meshStandardMaterial
+            color="#c5a059"
+            metalness={0.85}
+            roughness={0.25}
+            emissive={isNearby ? '#d4af37' : '#000000'}
+            emissiveIntensity={isNearby ? 0.3 : 0}
+          />
         </mesh>
+        {isNearby && (
+          <pointLight position={[0, 0, 0.25]} intensity={3.0} distance={1.8} color="#ffd899" />
+        )}
       </group>
     </group>
   );
@@ -881,6 +964,22 @@ function LuxuryVillaStepByStepArchitecture({
         <meshPhysicalMaterial color="#e8f6ff" transmission={0.92} transparent opacity={0.3} roughness={0.05} side={THREE.DoubleSide} />
       </mesh>
 
+      {/* Central Entrance Bronze Portal Archway at Z = 4 */}
+      <group position={[0, 0, 4]}>
+        {/* Portal Frame Header */}
+        <mesh position={[0, 3.85, 0]} castShadow>
+          <boxGeometry args={[3.6, 0.22, 0.38]} />
+          <meshStandardMaterial color="#c5a059" metalness={0.85} roughness={0.25} />
+        </mesh>
+        {/* Portal Side Posts */}
+        {[-1.8, 1.8].map((px, pi) => (
+          <mesh key={pi} position={[px, 1.9, 0]} castShadow>
+            <boxGeometry args={[0.22, 3.8, 0.38]} />
+            <meshStandardMaterial color="#c5a059" metalness={0.85} roughness={0.25} />
+          </mesh>
+        ))}
+      </group>
+
       {/* SOLID West & East Side Walls in Room 1 */}
       <mesh position={[-9, 2.9, -5]} castShadow receiveShadow>
         <boxGeometry args={[0.35, 5.8, 18]} />
@@ -891,7 +990,10 @@ function LuxuryVillaStepByStepArchitecture({
         <meshStandardMaterial color="#f7f6f2" roughness={0.4} />
       </mesh>
 
-      {/* Room 1 Furniture: Area Rug & Modern Linear Fireplace */}
+      {/* Stage C: Cinematic Architecture, Coffered Ceiling, Fireplace & Gallery Seating */}
+      <CinematicRoom1Environment />
+
+      {/* Room 1 Area Rug */}
       <mesh position={[0, 0.015, -4]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[5.2, 4.4]} />
         <meshStandardMaterial color="#edeae1" roughness={0.9} />
@@ -1234,6 +1336,13 @@ export function MuseumWalkthrough3D({
   const [doors, setDoors] = useState({ door1: false, door2: false, door3: false });
   const [teleportTarget, setTeleportTarget] = useState<[number, number, number] | null>(null);
 
+  // Cinematic Arrival Intro State (plays smooth camera glide from Portico to Room 1)
+  const [isIntroPlaying, setIsIntroPlaying] = useState(true);
+
+  const handleSkipIntro = () => {
+    setIsIntroPlaying(false);
+  };
+
   // Mobile Camera Zoom In / Out State (FOV: 25 max zoom in, 64 default, 85 wide zoom out)
   const [targetFov, setTargetFov] = useState(64);
   const pinchStartDistRef = useRef<number | null>(null);
@@ -1439,12 +1548,20 @@ export function MuseumWalkthrough3D({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Allow skipping intro instantly with Space, Enter, or W
+      if (isIntroPlaying && (e.code === 'Space' || e.code === 'Enter' || e.code === 'KeyW')) {
+        handleSkipIntro();
+        return;
+      }
+
       if (e.code === 'KeyE' || e.key === 'e' || e.key === 'E') {
         if (nearDoor) {
           handleToggleDoor(nearDoor.id);
         } else if (nearHiddenMemory) {
+          playDiscoverySound();
           onCollectHiddenMemory?.(nearHiddenMemory);
         } else if (nearMysteryBox) {
+          playDiscoverySound();
           onOpenMysteryBox?.(nearMysteryBox);
         } else if (isNearArcade) {
           onOpenArcade?.();
@@ -1453,6 +1570,7 @@ export function MuseumWalkthrough3D({
         } else if (isNearWishes) {
           onOpenWishes?.();
         } else if (nearbyExhibit) {
+          playDiscoverySound();
           onInspectExhibit(nearbyExhibit);
         }
       }
@@ -1460,6 +1578,7 @@ export function MuseumWalkthrough3D({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [
+    isIntroPlaying,
     nearDoor,
     nearbyExhibit,
     isNearCake,
@@ -1499,18 +1618,19 @@ export function MuseumWalkthrough3D({
         camera={{ fov: 64, near: 0.1, far: 200, position: [0, 1.65, 2] }}
         dpr={[1, 1.8]}
       >
-        <color attach="background" args={['#c8e2f2']} />
+        <color attach="background" args={['#c2dff2']} />
 
-        <ambientLight intensity={1.2} color="#ffffff" />
+        {/* Cinematic Atmospheric Lighting: Warm balanced ambient fill with rich directional sunbeams */}
+        <ambientLight intensity={0.52} color="#fcf6ec" />
         <directionalLight
-          position={[20, 40, 20]}
-          intensity={1.8}
-          color="#fff8eb"
+          position={[18, 32, 22]}
+          intensity={2.2}
+          color="#fff5e6"
           castShadow
           shadow-mapSize={[2048, 2048]}
           shadow-bias={-0.0001}
         />
-        <directionalLight position={[-15, 25, -20]} intensity={0.6} color="#e0f0ff" />
+        <directionalLight position={[-15, 20, -15]} intensity={0.4} color="#dbeafe" />
 
         <PlayerController
           onNearExhibitChange={setNearbyExhibit}
@@ -1526,13 +1646,15 @@ export function MuseumWalkthrough3D({
           arcade={arcade}
           collectedMemoryIds={collectedMemoryIds}
           isTouring={isTouring}
+          isIntroPlaying={isIntroPlaying}
+          onIntroComplete={() => setIsIntroPlaying(false)}
           teleportTarget={teleportTarget}
           joystickInput={joystickInput}
           touchLookDelta={touchLookDelta}
           targetFov={targetFov}
         />
 
-        {!isTouring && !isTouchDevice && (
+        {!isTouring && !isTouchDevice && !isIntroPlaying && (
           <PointerLockControls
             onLock={() => setIsLocked(true)}
             onUnlock={() => setIsLocked(false)}
@@ -1580,6 +1702,7 @@ export function MuseumWalkthrough3D({
             position={item.position}
             rotation={item.rotation}
             onInspect={onInspectExhibit}
+            isNearby={nearbyExhibit?.id === item.exhibit.id}
           />
         ))}
       </Canvas>
@@ -1782,25 +1905,71 @@ export function MuseumWalkthrough3D({
         </div>
       )}
 
+      {/* ===================== CINEMATIC ADVENTURE ARRIVAL SEQUENCE ===================== */}
+      {isIntroPlaying && (
+        <div
+          onClick={handleSkipIntro}
+          className="absolute inset-0 z-50 flex flex-col justify-between p-6 sm:p-10 bg-gradient-to-b from-black/80 via-black/30 to-black/85 backdrop-blur-[2px] transition-opacity duration-1000 select-none cursor-pointer"
+        >
+          {/* Top Letterbox Bar */}
+          <div className="w-full flex items-center justify-between pointer-events-auto">
+            <span className="text-[10px] sm:text-xs font-mono uppercase tracking-[0.25em] text-[#d4af37]">
+              ARCHITECTURAL EXHIBITION · IMMERSIVE EXPERIENCE
+            </span>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSkipIntro();
+              }}
+              className="px-4 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-mono text-xs uppercase tracking-wider backdrop-blur-md transition-all active:scale-95 border border-white/20 cursor-pointer"
+            >
+              Skip Intro [Space]
+            </button>
+          </div>
+
+          {/* Center Cinematic Title Card */}
+          <div className="text-center max-w-xl mx-auto my-auto pointer-events-none">
+            <p className="text-xs sm:text-sm font-mono uppercase tracking-[0.35em] text-[#d4af37] mb-2 font-bold animate-pulse">
+              PRESENTING
+            </p>
+            <h1 className="text-3xl sm:text-6xl font-serif font-black text-white tracking-wide drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)]">
+              THE MUSEUM OF YOU
+            </h1>
+            <p className="text-xs sm:text-base font-serif italic text-neutral-300 mt-3 drop-shadow">
+              Chapter 1 · The Foundations &amp; Memorable Moments
+            </p>
+          </div>
+
+          {/* Bottom Letterbox Hint */}
+          <div className="w-full text-center pointer-events-none">
+            <p className="text-[11px] font-mono tracking-widest text-[#d4af37]/80 uppercase animate-pulse">
+              Entering the Grand Portico · Tap anywhere or press Space to take control
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Prompt [E] Inspect Artwork (Photo or Video) */}
-      {nearbyExhibit && !nearDoor && !isNearCake && !isNearWishes && (
+      {nearbyExhibit && !nearDoor && !isNearCake && !isNearWishes && !nearHiddenMemory && !nearMysteryBox && !isNearArcade && !isIntroPlaying && (
         <div className="absolute bottom-20 sm:bottom-16 left-1/2 -translate-x-1/2 z-40 pointer-events-auto max-w-[90vw]">
           <button
-            onClick={() => onInspectExhibit(nearbyExhibit)}
-            className="flex items-center gap-2.5 px-5 sm:px-6 py-2.5 rounded-full bg-white/95 border border-[#c5a059] text-[#1a1918] shadow-2xl backdrop-blur-md hover:scale-105 transition-all cursor-pointer animate-pulse"
+            onClick={() => {
+              playDiscoverySound();
+              onInspectExhibit(nearbyExhibit);
+            }}
+            className="flex items-center gap-3 px-6 sm:px-8 py-3 rounded-full bg-neutral-950/90 border-2 border-[#d4af37] text-white shadow-2xl backdrop-blur-md hover:scale-105 transition-all cursor-pointer animate-pulse group"
           >
-            <span className="w-5 h-5 sm:w-6 sm:h-6 rounded bg-[#c5a059] text-black font-mono font-bold text-xs flex items-center justify-center">
+            <span className="w-6 h-6 rounded-md bg-[#d4af37] text-neutral-950 font-mono font-black text-xs flex items-center justify-center shadow">
               {isTouchDevice ? '👆' : 'E'}
             </span>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
               {nearbyExhibit.mediaType === 'video' || nearbyExhibit.videoUrl ? (
-                <Video className="w-3.5 h-3.5 text-rose-500" />
+                <Video className="w-4 h-4 text-rose-400 group-hover:scale-110 transition-transform" />
               ) : (
-                <ImageIcon className="w-3.5 h-3.5 text-amber-600" />
+                <ImageIcon className="w-4 h-4 text-[#d4af37] group-hover:scale-110 transition-transform" />
               )}
-              <span className="text-xs font-display font-bold text-stone-900 truncate max-w-[200px] sm:max-w-none">
-                {nearbyExhibit.mediaType === 'video' || nearbyExhibit.videoUrl ? 'Watch Video: ' : 'View Photo: '}
-                {nearbyExhibit.title}
+              <span className="text-xs sm:text-sm font-serif font-bold text-neutral-100 truncate max-w-[240px] sm:max-w-none">
+                Examine &ldquo;{nearbyExhibit.title}&rdquo; {nearbyExhibit.date ? `(${nearbyExhibit.date})` : ''}
               </span>
             </div>
           </button>
